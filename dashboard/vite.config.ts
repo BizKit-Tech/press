@@ -29,7 +29,8 @@ export default defineConfig({
 			org: process.env.SENTRY_ORG,
 			project: process.env.SENTRY_PROJECT,
 			applicationKey: 'press-dashboard',
-			authToken: process.env.SENTRY_AUTH_TOKEN
+			authToken: process.env.SENTRY_AUTH_TOKEN,
+			telemetry: false
 		})
 	],
 	resolve: {
