@@ -11,6 +11,7 @@
   "domain",
   "self_hosted_server_domain",
   "title",
+  "environment",
   "column_break_4",
   "cluster",
   "provider",
@@ -29,6 +30,7 @@
   "auto_add_storage_max",
   "networking_section",
   "ip",
+  "instance_id",
   "column_break_3",
   "private_ip",
   "private_mac_address",
@@ -43,6 +45,7 @@
   "is_upstream_setup",
   "database_section",
   "database_server",
+  "database_name",
   "self_hosted_mariadb_server",
   "is_managed_database",
   "column_break_jdiy",
@@ -545,10 +548,27 @@
    "fieldtype": "Check",
    "label": "Has Data Volume",
    "read_only": 1
+  },
+  {
+   "fieldname": "environment",
+   "fieldtype": "Select",
+   "label": "Environment",
+   "options": "Development\nProduction"
+  },
+  {
+   "fieldname": "instance_id",
+   "fieldtype": "Data",
+   "label": "Instance ID"
+  },
+  {
+   "fieldname": "database_name",
+   "fieldtype": "Data",
+   "label": "Database Name",
+   "set_only_once": 1
   }
  ],
  "links": [],
- "modified": "2025-01-02 16:52:55.927591",
+ "modified": "2025-01-23 14:19:42.928641",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",
