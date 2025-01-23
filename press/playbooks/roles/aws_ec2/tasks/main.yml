@@ -1,0 +1,45 @@
+---
+- name: Create security group
+  amazon.aws.ec2_security_group:
+    name: '{{ sec_group }}'
+    description: '{{ instance_name }} {{ environment }} settings'
+    region: '{{ region }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports:
+          - 8000
+        cidr_ip: 0.0.0.0/0
+
+- name: Provision an EC2 instance with a public IP address
+  amazon.aws.ec2_instance:
+    name: '{{ instance_name }}'
+    key_name: 'GitHub Actions Runner'
+    # vpc_subnet_id: "{{ vpc_id }}"
+    instance_type: '{{ instance_type }}'
+    security_group: '{{ sec_group }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    region: '{{ region }}'
+    network:
+      assign_public_ip: true
+    image_id: '{{ image }}'
+    tags:
+      Environment: Testing
+
+- name: Get instances facts
+  ec2_instance_info:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    region: '{{ region }}'
+  register: result
+
+- name: Instances ID
+  debug:
+    msg: 'ID: {{ item.instance_id }} - State: {{ item.state.name }} - Public DNS: {{ item.public_dns_name }}'
+  loop: '{{ result.instances }}'

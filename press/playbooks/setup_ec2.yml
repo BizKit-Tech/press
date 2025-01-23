@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  become: yes
+  gather_facts: no
+  vars:
+    instance_name: '{{ instance_name }}'
+    key_name: 'GitHub Actions Runner'
+    region: ap-southeast-1
+    image: '{{ ami_id }}'
+    instance_type: '{{ instance_type }}'
+    # vpc_id: subnet-012345
+    sec_group: '{{ instance_abbr }}-{{ environment }}'
+    environment: '{{ environment }}'
+  roles:
+    - role: aws_ec2
