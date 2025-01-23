@@ -1293,7 +1293,6 @@ class Server(BaseServer):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
 		from press.press.doctype.resource_tag.resource_tag import ResourceTag
 		from press.press.doctype.server_mount.server_mount import ServerMount
 
@@ -1301,15 +1300,18 @@ class Server(BaseServer):
 		auto_add_storage_max: DF.Int
 		auto_add_storage_min: DF.Int
 		cluster: DF.Link | None
+		database_name: DF.Data | None
 		database_server: DF.Link | None
 		disable_agent_job_auto_retry: DF.Check
 		domain: DF.Link | None
+		environment: DF.Literal["Development", "Production"]
 		frappe_public_key: DF.Code | None
 		frappe_user_password: DF.Password | None
 		has_data_volume: DF.Check
 		hostname: DF.Data
 		hostname_abbreviation: DF.Data | None
 		ignore_incidents_since: DF.Datetime | None
+		instance_id: DF.Data | None
 		ip: DF.Data | None
 		is_managed_database: DF.Check
 		is_primary: DF.Check
