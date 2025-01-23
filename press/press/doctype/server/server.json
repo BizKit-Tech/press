@@ -28,6 +28,12 @@
   "plan",
   "auto_add_storage_min",
   "auto_add_storage_max",
+  "instance_details_section",
+  "instance_type",
+  "vcpu",
+  "instance_ram",
+  "column_break_rxox",
+  "volume_size",
   "networking_section",
   "ip",
   "instance_id",
@@ -565,10 +571,44 @@
    "fieldtype": "Data",
    "label": "Database Name",
    "set_only_once": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "instance_details_section",
+   "fieldtype": "Section Break",
+   "label": "Instance Details"
+  },
+  {
+   "fieldname": "instance_type",
+   "fieldtype": "Data",
+   "label": "Instance Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vcpu",
+   "fieldtype": "Int",
+   "label": "vCPU",
+   "read_only": 1
+  },
+  {
+   "fieldname": "instance_ram",
+   "fieldtype": "Int",
+   "label": "RAM (MB)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_rxox",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "volume_size",
+   "fieldtype": "Int",
+   "label": "Volume Size (GB)",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2025-01-23 14:19:42.928641",
+ "modified": "2025-01-23 17:35:47.716866",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",

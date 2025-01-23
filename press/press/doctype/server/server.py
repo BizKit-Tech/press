@@ -1312,6 +1312,8 @@ class Server(BaseServer):
 		hostname_abbreviation: DF.Data | None
 		ignore_incidents_since: DF.Datetime | None
 		instance_id: DF.Data | None
+		instance_ram: DF.Int
+		instance_type: DF.Data | None
 		ip: DF.Data | None
 		is_managed_database: DF.Check
 		is_primary: DF.Check
@@ -1351,7 +1353,9 @@ class Server(BaseServer):
 		use_for_build: DF.Check
 		use_for_new_benches: DF.Check
 		use_for_new_sites: DF.Check
+		vcpu: DF.Int
 		virtual_machine: DF.Link | None
+		volume_size: DF.Int
 	# end: auto-generated types
 
 	GUNICORN_MEMORY = 150  # avg ram usage of 1 gunicorn worker
