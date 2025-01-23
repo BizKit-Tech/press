@@ -22,7 +22,6 @@ class PressSettings(Document):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
 		from press.press.doctype.app_group.app_group import AppGroup
 		from press.press.doctype.erpnext_app.erpnext_app import ERPNextApp
 
@@ -52,6 +51,7 @@ class PressSettings(Document):
 		commission: DF.Float
 		compress_app_cache: DF.Check
 		data_40: DF.Data | None
+		default_ami: DF.Data | None
 		default_apps: DF.Table[AppGroup]
 		default_outgoing_id: DF.Data | None
 		default_outgoing_pass: DF.Data | None
