@@ -1532,6 +1532,13 @@ class Server(BaseServer):
 			if play.status == "Success":
 				self.status = "Active"
 				self.is_server_setup = True
+				
+				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Create EC2 Instance"})
+				task_result = json.loads(task.result)
+
+				self.instance_id = task_result[0].get("instance_id")
+				self.ip = task_result[0].get("public_ip_address")
+				self.private_ip = task_result[0].get("private_dns_name")
 			else:
 				self.status = "Broken"
 		except Exception:

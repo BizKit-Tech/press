@@ -52,14 +52,11 @@
       Project: '{{ instance_name }}'
       FrappePress: Yes
 
-- name: Get instances facts
+- name: Get instance facts
   amazon.aws.ec2_instance_info:
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
     region: '{{ region }}'
+    instance_ids:
+      - '{{ ec2.instance_ids[0] }}'
   register: result
-
-- name: Instances ID
-  debug:
-    msg: 'ID: {{ item.instance_id }} - State: {{ item.state.name }} - Public DNS: {{ item.public_dns_name }}'
-  loop: '{{ result.instances }}'
