@@ -1503,6 +1503,11 @@ class Server(BaseServer):
 
 		environment_abbr = "prod" if self.environment == "Production" else "dev"
 
+		if environment_abbr == "prod":
+			ports = [80, 443]
+		else:
+			ports = [8000]
+
 		try:
 			ansible = Ansible(
 				playbook="setup_ec2.yml",
@@ -1516,7 +1521,9 @@ class Server(BaseServer):
 					"ami_id": ami_id,
 					"instance_type": self.instance_type,
 					"instance_abbr": self.hostname_abbreviation,
-					"environment": environment_abbr,
+					"environment": self.environment,
+					"environment_abbr": environment_abbr,
+					"ports": ports,
 				},
 			)
 			play = ansible.run()

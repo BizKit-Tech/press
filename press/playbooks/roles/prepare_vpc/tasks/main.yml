@@ -1,0 +1,61 @@
+---
+- name: Create VPC
+  amazon.aws.ec2_vpc_net:
+    name: 
+    cidr_block: 
+    dns_hostnames: true
+    dns_support: true
+    tenancy: default
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+  register: vpc
+  
+- name: Create public subnet 1
+  amazon.aws.ec2_vpc_subnet:
+    vpc_id: '{{ vpc.vpc.id }}'
+    cidr: 10.0.0.0/24
+    az: ap-southeast-1a
+    map_public: true
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Name: '{{ instance_name }} Public 1'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+  register: subnet1
+
+- name: Create public subnet 2
+  amazon.aws.ec2_vpc_subnet:
+    vpc_id: '{{ vpc.vpc.id }}'
+    cidr: 10.0.1.0/24
+    az: ap-southeast-1b
+    map_public: true
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Name: '{{ instance_name }} Public 2'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+  register: subnet2
+
+- name: Create internet gateway
+  amazon.aws.ec2_vpc_igw:
+    vpc_id: '{{ vpc.vpc.id }}'
+    state: present
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+  register: igw
+
+- name: Create route table
+  amazon.aws.ec2_vpc_route_table:
+    routes:
+      dest: 0.0.0.0/0
+      gateway_id: '{{ igw.gateway_id }}'
+      subnets:
+        - '{{ subnet1.subnet.id }}'
+        - '{{ subnet2.subnet.id }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
