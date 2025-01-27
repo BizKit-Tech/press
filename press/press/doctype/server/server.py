@@ -1510,7 +1510,7 @@ class Server(BaseServer):
 
 		try:
 			ansible = Ansible(
-				playbook="setup_ec2.yml",
+				playbook="ec2_server.yml",
 				server=self,
 				user=self._ssh_user(),
 				port=self._ssh_port(),
@@ -1521,7 +1521,7 @@ class Server(BaseServer):
 					"ami_id": ami_id,
 					"instance_type": self.instance_type,
 					"instance_abbr": self.hostname_abbreviation,
-					"environment": self.environment,
+					"instance_environment": self.environment,
 					"environment_abbr": environment_abbr,
 					"ports": ports,
 				},

@@ -4,13 +4,12 @@
   gather_facts: no
   vars:
     instance_name: '{{ instance_name }}'
-    key_name: 'GitHub Actions Runner'
+    key_name: 'BizKit'
     region: ap-southeast-1
     image: '{{ ami_id }}'
     instance_type: '{{ instance_type }}'
-    # vpc_id: subnet-012345
-    sec_group: '{{ instance_abbr }}-{{ environment }}'
-    environment: '{{ environment }}'
+    sec_group: '{{ instance_abbr }}-{{ environment_abbr }}'
+    instance_environment: '{{ instance_environment }}'
     environment_abbr: '{{ environment_abbr }}'
     ports: '{{ ports }}'
   roles:

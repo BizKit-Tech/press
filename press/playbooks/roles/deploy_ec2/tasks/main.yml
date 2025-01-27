@@ -4,6 +4,7 @@
     name: '{{ sec_group }}'
     description: '{{ instance_name }} {{ environment_abbr }} settings'
     region: '{{ region }}'
+    vpc_id: '{{ vpc.vpc.id }}'
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
     rules:
@@ -15,28 +16,41 @@
         ports: '{{ ports }}'
         cidr_ip: 0.0.0.0/0
     tags:
-      Environment: '{{ environment }}'
+      Environment: '{{ instance_environment }}'
       Project: '{{ instance_name }}'
       FrappePress: Yes
 
-- name: Provision an EC2 instance with a public IP address
+- name: Provision an EC2 instance
   amazon.aws.ec2_instance:
-    name: '{{ instance_name }}'
-    key_name: 'GitHub Actions Runner'
-    # vpc_subnet_id: "{{ vpc_id }}"
+    name: '{{ instance_name }} {{ instance_environment }}'
+    key_name: '{{ key_name }}'
+    vpc_subnet_id: '{{ subnet1.subnet.id }}'
     instance_type: '{{ instance_type }}'
     security_group: '{{ sec_group }}'
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
     region: '{{ region }}'
-    network:
-      assign_public_ip: true
     image_id: '{{ image }}'
+    wait: true
+    state: running
     tags:
-      Environment: '{{ environment }}'
+      Environment: '{{ instance_environment }}'
       Project: '{{ instance_name }}'
       FrappePress: Yes
       EmailAccountSecretARN: arn:aws:secretsmanager:ap-southeast-1:024113903379:secret:EMAIL-ACCOUNT-PASSWORDS-wpNZm3
+  register: ec2
+
+- name: Allocate a new elastic IP and associate it with the EC2 instance
+  amazon.aws.ec2_eip:
+    device_id: '{{ ec2.instance_ids[0] }}'
+    in_vpc: true
+    region: '{{ region }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Environment: '{{ instance_environment }}'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
 
 - name: Get instances facts
   amazon.aws.ec2_instance_info:
