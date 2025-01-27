@@ -2,7 +2,7 @@
 - name: Create security group
   amazon.aws.ec2_security_group:
     name: '{{ sec_group }}'
-    description: '{{ instance_name }} {{ environment }} settings'
+    description: '{{ instance_name }} {{ environment_abbr }} settings'
     region: '{{ region }}'
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
@@ -12,9 +12,12 @@
           - 22
         cidr_ip: 0.0.0.0/0
       - proto: tcp
-        ports:
-          - 8000
+        ports: '{{ ports }}'
         cidr_ip: 0.0.0.0/0
+    tags:
+      Environment: '{{ environment }}'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
 
 - name: Provision an EC2 instance with a public IP address
   amazon.aws.ec2_instance:
@@ -30,10 +33,13 @@
       assign_public_ip: true
     image_id: '{{ image }}'
     tags:
-      Environment: Testing
+      Environment: '{{ environment }}'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+      EmailAccountSecretARN: arn:aws:secretsmanager:ap-southeast-1:024113903379:secret:EMAIL-ACCOUNT-PASSWORDS-wpNZm3
 
 - name: Get instances facts
-  ec2_instance_info:
+  amazon.aws.ec2_instance_info:
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
     region: '{{ region }}'

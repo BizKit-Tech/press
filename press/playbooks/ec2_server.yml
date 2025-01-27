@@ -11,5 +11,8 @@
     # vpc_id: subnet-012345
     sec_group: '{{ instance_abbr }}-{{ environment }}'
     environment: '{{ environment }}'
+    environment_abbr: '{{ environment_abbr }}'
+    ports: '{{ ports }}'
   roles:
-    - role: aws_ec2
+    - role: prepare_vpc
+    - role: deploy_ec2
