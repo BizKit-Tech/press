@@ -1,0 +1,62 @@
+---
+- name: Create security group
+  amazon.aws.ec2_security_group:
+    name: '{{ sec_group }}'
+    description: '{{ instance_name }} {{ environment_abbr }} settings'
+    region: '{{ region }}'
+    vpc_id: '{{ vpc.vpc.id }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports: '{{ ports }}'
+        cidr_ip: 0.0.0.0/0
+    tags:
+      Environment: '{{ instance_environment }}'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+
+- name: Provision an EC2 instance
+  amazon.aws.ec2_instance:
+    name: '{{ instance_name }} {{ instance_environment }}'
+    key_name: '{{ key_name }}'
+    vpc_subnet_id: '{{ subnet1.subnet.id }}'
+    instance_type: '{{ instance_type }}'
+    security_group: '{{ sec_group }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    region: '{{ region }}'
+    image_id: '{{ image }}'
+    wait: true
+    state: running
+    tags:
+      Environment: '{{ instance_environment }}'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+      EmailAccountSecretARN: arn:aws:secretsmanager:ap-southeast-1:024113903379:secret:EMAIL-ACCOUNT-PASSWORDS-wpNZm3
+  register: ec2
+
+- name: Allocate a new elastic IP and associate it with the EC2 instance
+  amazon.aws.ec2_eip:
+    device_id: '{{ ec2.instance_ids[0] }}'
+    in_vpc: true
+    region: '{{ region }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Environment: '{{ instance_environment }}'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+
+- name: Get instance facts
+  amazon.aws.ec2_instance_info:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    region: '{{ region }}'
+    instance_ids:
+      - '{{ ec2.instance_ids[0] }}'
+  register: result

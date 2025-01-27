@@ -1490,34 +1490,40 @@ class Server(BaseServer):
 		agent.new_server(self.name)
 
 	def _setup_server(self):
-		agent_password = self.get_password("agent_password")
-		agent_repository_url = self.get_agent_repository_url()
-		certificate = self.get_certificate()
-		log_server, kibana_password = self.get_log_server()
-		agent_sentry_dsn = frappe.db.get_single_value("Press Settings", "agent_sentry_dsn")
+		# agent_password = self.get_password("agent_password")
+		# agent_repository_url = self.get_agent_repository_url()
+		# certificate = self.get_certificate()
+		# log_server, kibana_password = self.get_log_server()
+		# agent_sentry_dsn = frappe.db.get_single_value("Press Settings", "agent_sentry_dsn")
+
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+		ami_id = settings.default_ami
+
+		environment_abbr = "prod" if self.environment == "Production" else "dev"
+
+		if environment_abbr == "prod":
+			ports = [80, 443]
+		else:
+			ports = [8000]
 
 		try:
 			ansible = Ansible(
-				playbook="self_hosted.yml" if getattr(self, "is_self_hosted", False) else "server.yml",
+				playbook="ec2_server.yml",
 				server=self,
 				user=self._ssh_user(),
 				port=self._ssh_port(),
 				variables={
-					"server": self.name,
-					"private_ip": self.private_ip,
-					"proxy_ip": self.get_proxy_ip(),
-					"workers": "2",
-					"agent_password": agent_password,
-					"agent_repository_url": agent_repository_url,
-					"agent_sentry_dsn": agent_sentry_dsn,
-					"monitoring_password": self.get_monitoring_password(),
-					"log_server": log_server,
-					"kibana_password": kibana_password,
-					"certificate_private_key": certificate.private_key,
-					"certificate_full_chain": certificate.full_chain,
-					"certificate_intermediate_chain": certificate.intermediate_chain,
-					"docker_depends_on_mounts": self.docker_depends_on_mounts,
-					**self.get_mount_variables(),
+					"instance_name": self.title,
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+					"ami_id": ami_id,
+					"instance_type": self.instance_type,
+					"instance_abbr": self.hostname_abbreviation,
+					"instance_environment": self.environment,
+					"environment_abbr": environment_abbr,
+					"ports": ports,
 				},
 			)
 			play = ansible.run()
@@ -1526,6 +1532,13 @@ class Server(BaseServer):
 			if play.status == "Success":
 				self.status = "Active"
 				self.is_server_setup = True
+				
+				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Get instance facts"})
+				task_result = json.loads(task.result)
+
+				self.instance_id = task_result[0].get("instance_id")
+				self.ip = task_result[0].get("public_ip_address")
+				self.private_ip = task_result[0].get("private_dns_name")
 			else:
 				self.status = "Broken"
 		except Exception:

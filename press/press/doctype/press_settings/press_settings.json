@@ -141,6 +141,7 @@
   "github_app_private_key",
   "aws_section",
   "aws_access_key_id",
+  "default_ami",
   "column_break_agig",
   "aws_secret_access_key",
   "hetzner_section",
@@ -1314,11 +1315,17 @@
    "fieldname": "partnership_fee_inr",
    "fieldtype": "Int",
    "label": "Partnership Fee INR"
+  },
+  {
+   "description": "AMI ID of the default AMI to be used when setting up an EC2 instance. Make sure it has the necessary permissions in case of cross-account sharing.",
+   "fieldname": "default_ami",
+   "fieldtype": "Data",
+   "label": "Default AMI"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2024-12-27 11:44:09.454080",
+ "modified": "2025-01-23 19:55:25.951088",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Press Settings",
