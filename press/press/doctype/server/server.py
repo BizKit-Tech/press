@@ -1533,7 +1533,7 @@ class Server(BaseServer):
 				self.status = "Active"
 				self.is_server_setup = True
 				
-				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Create EC2 Instance"})
+				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Get instance facts"})
 				task_result = json.loads(task.result)
 
 				self.instance_id = task_result[0].get("instance_id")
