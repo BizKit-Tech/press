@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  become: yes
+  gather_facts: no
+  vars:
+    instance_name: '{{ instance_name }}'
+    region: ap-southeast-1
+    instance_type: '{{ instance_type }}'
+    sec_group: '{{ instance_abbr }}-db'
+    storage_size: '{{ storage_size }}'
+    backup_retention_period: '{{ backup_retention_period }}'
+    db_password: '{{ db_password }}'
+    max_allocated_storage: '{{ max_storage }}'
+    backup_window: '{{ backup_window }}' # hh24:mi-hh24:mi
+    maintenance_window: '{{ maintenance_window }}' # ddd:hh24:mi-ddd:hh24:mi
+  roles:
+    - role: prepare_vpc
+    - role: deploy_rds
