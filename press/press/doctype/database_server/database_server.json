@@ -20,6 +20,20 @@
   "is_server_prepared",
   "is_server_renamed",
   "public",
+  "instance_details_sb",
+  "instance_type",
+  "column_break_blsz",
+  "storage_size",
+  "maintenance_sb",
+  "backup_retention_period",
+  "backup_window_start_time",
+  "backup_window_duration",
+  "backup_window",
+  "column_break_boyl",
+  "maintenance_window_start_day",
+  "maintenance_window_start_time",
+  "maintenance_window_duration",
+  "maintenance_window",
   "billing_section",
   "team",
   "column_break_11",
@@ -225,7 +239,7 @@
    "fieldname": "provider",
    "fieldtype": "Select",
    "label": "Provider",
-   "options": "Generic\nScaleway\nAWS EC2\nOCI",
+   "options": "Generic\nScaleway\nAWS RDS\nAWS EC2\nOCI",
    "set_only_once": 1
   },
   {
@@ -539,11 +553,89 @@
    "fieldtype": "Check",
    "label": "Has Data Volume",
    "read_only": 1
+  },
+  {
+   "fieldname": "instance_details_sb",
+   "fieldtype": "Section Break",
+   "label": "Instance Details"
+  },
+  {
+   "fieldname": "instance_type",
+   "fieldtype": "Data",
+   "label": "Instance Type",
+   "mandatory_depends_on": "eval: doc.provider == \"AWS RDS\""
+  },
+  {
+   "fieldname": "storage_size",
+   "fieldtype": "Int",
+   "label": "Storage Size (GB)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "maintenance_sb",
+   "fieldtype": "Section Break",
+   "label": "Maintenance"
+  },
+  {
+   "default": "3",
+   "fieldname": "backup_retention_period",
+   "fieldtype": "Int",
+   "label": "Backup Retention Period (1-35 Days)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "backup_window_start_time",
+   "fieldtype": "Time",
+   "label": "Backup Window Start Time"
+  },
+  {
+   "fieldname": "backup_window_duration",
+   "fieldtype": "Duration",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "Backup Window Duration"
+  },
+  {
+   "fieldname": "column_break_boyl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "backup_window",
+   "fieldtype": "HTML",
+   "label": "Backup Window"
+  },
+  {
+   "default": "Sunday",
+   "fieldname": "maintenance_window_start_day",
+   "fieldtype": "Select",
+   "label": "Maintenance Window Start Day",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday"
+  },
+  {
+   "fieldname": "maintenance_window_start_time",
+   "fieldtype": "Time",
+   "label": "Maintenance Window Start Time"
+  },
+  {
+   "fieldname": "maintenance_window_duration",
+   "fieldtype": "Duration",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "Maintenance Window Duration"
+  },
+  {
+   "fieldname": "maintenance_window",
+   "fieldtype": "HTML",
+   "label": "Maintenance Window"
+  },
+  {
+   "fieldname": "column_break_blsz",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-02 16:51:08.113931",
+ "modified": "2025-01-28 18:44:58.337161",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Database Server",

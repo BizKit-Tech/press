@@ -280,9 +280,93 @@ frappe.ui.form.on('Database Server', {
 				__('Dangerous Actions'),
 			);
 		}
+
+		frm.$wrapper.find('.duration-input[data-duration="minutes"]').attr("step", "30");
+		frm.$wrapper.find('.duration-input[data-duration="hours"]').attr("max", "24");
 	},
 
 	hostname: function (frm) {
 		press.set_hostname_abbreviation(frm);
 	},
+
+	maintenance_window_start_day: function (frm) {
+		set_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
+	},
+
+	maintenance_window_start_time: function (frm) {
+		const formatted_time = moment(frm.doc.maintenance_window_start_time, ["HH:mm:ss"]).format("HH:mm");
+		frm.set_value("maintenance_window_start_time", formatted_time);
+		set_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
+	},
+
+	maintenance_window_duration: function (frm) {
+		if (frm.doc.maintenance_window_duration > 84600) {
+			frm.set_value("maintenance_window_duration", 84600);
+		}
+		set_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
+	},
+
+	backup_retention_period: function (frm) {
+		if (frm.doc.backup_retention_period < 1 || frm.doc.backup_retention_period > 35) {
+			default_value = frm.doc.backup_retention_period > 35 ? 35 : 1;
+			frm.set_value("backup_retention_period", default_value);
+		}
+		set_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
+	},
+
+	backup_window_start_time: function (frm) {
+		const formatted_time = moment(frm.doc.backup_window_start_time, ["HH:mm:ss"]).format("HH:mm");
+		frm.set_value("backup_window_start_time", formatted_time);
+		set_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
+	},
+
+	backup_window_duration: function (frm) {
+		if (frm.doc.backup_window_duration > 84600) {
+			frm.set_value("backup_window_duration", 84600);
+		}
+		set_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
+	}
 });
+
+
+function calculate_time_range(start_time, duration) {
+    const [start_hour, start_minute] = start_time.split(':').map(Number);
+
+    const start_date = new Date();
+    start_date.setHours(start_hour, start_minute, 0, 0);
+
+    const end_date = new Date(start_date.getTime() + duration * 1000);
+
+    const format_time = (date) =>
+        date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+
+    const start_formatted = format_time(start_date);
+    const end_formatted = format_time(end_date);
+
+    return `${start_formatted} to ${end_formatted}`;
+};
+
+
+function set_backup_window_description(start_time, duration, retention) {
+	if (!start_time || !duration || !retention) {
+		return;
+	}
+	const time_range = calculate_time_range(start_time, duration);
+	cur_frm.get_field("backup_window").$wrapper.html(`
+		<p>Backups will be created daily from ${time_range} UTC+8 and retained for ${retention} days.</p>
+	`);
+};
+
+function set_maintenance_window_description(start_day, start_time, duration) {
+	if (!start_day || !start_time || !duration) {
+		return;
+	}
+	const time_range = calculate_time_range(start_time, duration);
+	cur_frm.get_field("maintenance_window").$wrapper.html(`
+		<p>System maintenance will be performed every ${start_day} at ${time_range} UTC+8.</p>
+	`);
+}

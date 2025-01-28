@@ -26,16 +26,16 @@ class DatabaseServer(BaseServer):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
-		from press.press.doctype.database_server_mariadb_variable.database_server_mariadb_variable import (
-			DatabaseServerMariaDBVariable,
-		)
+		from press.press.doctype.database_server_mariadb_variable.database_server_mariadb_variable import DatabaseServerMariaDBVariable
 		from press.press.doctype.resource_tag.resource_tag import ResourceTag
 		from press.press.doctype.server_mount.server_mount import ServerMount
 
 		agent_password: DF.Password | None
 		auto_add_storage_max: DF.Int
 		auto_add_storage_min: DF.Int
+		backup_retention_period: DF.Int
+		backup_window_duration: DF.Duration | None
+		backup_window_start_time: DF.Time | None
 		cluster: DF.Link | None
 		domain: DF.Link | None
 		frappe_public_key: DF.Code | None
@@ -43,6 +43,7 @@ class DatabaseServer(BaseServer):
 		has_data_volume: DF.Check
 		hostname: DF.Data
 		hostname_abbreviation: DF.Data | None
+		instance_type: DF.Data | None
 		ip: DF.Data | None
 		is_performance_schema_enabled: DF.Check
 		is_primary: DF.Check
@@ -52,6 +53,9 @@ class DatabaseServer(BaseServer):
 		is_server_renamed: DF.Check
 		is_server_setup: DF.Check
 		is_stalk_setup: DF.Check
+		maintenance_window_duration: DF.Duration | None
+		maintenance_window_start_day: DF.Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+		maintenance_window_start_time: DF.Time | None
 		mariadb_root_password: DF.Password | None
 		mariadb_system_variables: DF.Table[DatabaseServerMariaDBVariable]
 		memory_allocator: DF.Literal["System", "jemalloc", "TCMalloc"]
@@ -65,7 +69,7 @@ class DatabaseServer(BaseServer):
 		private_ip: DF.Data | None
 		private_mac_address: DF.Data | None
 		private_vlan_id: DF.Data | None
-		provider: DF.Literal["Generic", "Scaleway", "AWS EC2", "OCI"]
+		provider: DF.Literal["Generic", "Scaleway", "AWS RDS", "AWS EC2", "OCI"]
 		public: DF.Check
 		ram: DF.Float
 		root_public_key: DF.Code | None
@@ -83,6 +87,7 @@ class DatabaseServer(BaseServer):
 		stalk_threshold: DF.Int
 		stalk_variable: DF.Data | None
 		status: DF.Literal["Pending", "Installing", "Active", "Broken", "Archived"]
+		storage_size: DF.Int
 		tags: DF.Table[ResourceTag]
 		team: DF.Link | None
 		title: DF.Data | None
