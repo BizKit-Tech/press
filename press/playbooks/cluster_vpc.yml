@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  become: yes
+  gather_facts: no
+  vars:
+    instance_name: '{{ instance_name }}'
+    region: ap-southeast-1
+  roles:
+    - role: prepare_vpc
