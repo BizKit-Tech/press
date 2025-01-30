@@ -37,9 +37,11 @@
   "networking_section",
   "cidr_block",
   "subnet_cidr_block",
+  "subnet_2_cidr_block",
   "column_break_12",
   "vpc_id",
   "subnet_id",
+  "subnet_2_id",
   "security_group_id",
   "proxy_security_group_id",
   "network_acl_id",
@@ -122,7 +124,7 @@
   {
    "fieldname": "subnet_cidr_block",
    "fieldtype": "Data",
-   "label": "Subnet CIDR Block",
+   "label": "Subnet 1 CIDR Block",
    "read_only": 1
   },
   {
@@ -164,13 +166,13 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Active",
+   "default": "Pending",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Active\nCopying Images\nArchived"
+   "options": "Pending\nActive\nCopying Images\nArchived"
   },
   {
    "collapsible": 1,
@@ -234,7 +236,7 @@
   {
    "fieldname": "subnet_id",
    "fieldtype": "Data",
-   "label": "Subnet ID",
+   "label": "Subnet 1 ID",
    "read_only": 1
   },
   {
@@ -283,6 +285,18 @@
    "fieldtype": "Link",
    "label": "Team",
    "options": "Team"
+  },
+  {
+   "fieldname": "subnet_2_id",
+   "fieldtype": "Data",
+   "label": "Subnet 2 ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subnet_2_cidr_block",
+   "fieldtype": "Data",
+   "label": "Subnet 2 CIDR Block",
+   "read_only": 1
   }
  ],
  "image_field": "image",
@@ -319,7 +333,7 @@
    "link_fieldname": "document_name"
   }
  ],
- "modified": "2024-09-14 13:52:58.308402",
+ "modified": "2025-01-30 19:07:10.451954",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Cluster",
