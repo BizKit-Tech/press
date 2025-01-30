@@ -283,6 +283,9 @@ frappe.ui.form.on('Database Server', {
 
 		frm.$wrapper.find('.duration-input[data-duration="minutes"]').attr("step", "30");
 		frm.$wrapper.find('.duration-input[data-duration="hours"]').attr("max", "24");
+
+		render_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
+		render_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
 	},
 
 	hostname: function (frm) {
@@ -290,20 +293,20 @@ frappe.ui.form.on('Database Server', {
 	},
 
 	maintenance_window_start_day: function (frm) {
-		set_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
+		render_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
 	},
 
 	maintenance_window_start_time: function (frm) {
 		const formatted_time = moment(frm.doc.maintenance_window_start_time, ["HH:mm:ss"]).format("HH:mm");
 		frm.set_value("maintenance_window_start_time", formatted_time);
-		set_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
+		render_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
 	},
 
 	maintenance_window_duration: function (frm) {
 		if (frm.doc.maintenance_window_duration > 84600) {
 			frm.set_value("maintenance_window_duration", 84600);
 		}
-		set_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
+		render_maintenance_window_description(frm.doc.maintenance_window_start_day, frm.doc.maintenance_window_start_time, frm.doc.maintenance_window_duration);
 	},
 
 	backup_retention_period: function (frm) {
@@ -311,20 +314,20 @@ frappe.ui.form.on('Database Server', {
 			default_value = frm.doc.backup_retention_period > 35 ? 35 : 1;
 			frm.set_value("backup_retention_period", default_value);
 		}
-		set_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
+		render_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
 	},
 
 	backup_window_start_time: function (frm) {
 		const formatted_time = moment(frm.doc.backup_window_start_time, ["HH:mm:ss"]).format("HH:mm");
 		frm.set_value("backup_window_start_time", formatted_time);
-		set_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
+		render_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
 	},
 
 	backup_window_duration: function (frm) {
 		if (frm.doc.backup_window_duration > 84600) {
 			frm.set_value("backup_window_duration", 84600);
 		}
-		set_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
+		render_backup_window_description(frm.doc.backup_window_start_time, frm.doc.backup_window_duration, frm.doc.backup_retention_period);
 	}
 });
 
@@ -347,11 +350,14 @@ function calculate_time_range(start_time, duration) {
     const start_formatted = format_time(start_date);
     const end_formatted = format_time(end_date);
 
-    return `${start_formatted} to ${end_formatted}`;
+	const crosses_midnight = end_date.getDate() !== start_date.getDate();
+    const day_info = crosses_midnight ? "next day " : "";
+
+    return `${start_formatted} to ${day_info}${end_formatted}`;
 };
 
 
-function set_backup_window_description(start_time, duration, retention) {
+function render_backup_window_description(start_time, duration, retention) {
 	if (!start_time || !duration || !retention) {
 		return;
 	}
@@ -361,7 +367,7 @@ function set_backup_window_description(start_time, duration, retention) {
 	`);
 };
 
-function set_maintenance_window_description(start_day, start_time, duration) {
+function render_maintenance_window_description(start_day, start_time, duration) {
 	if (!start_day || !start_time || !duration) {
 		return;
 	}
