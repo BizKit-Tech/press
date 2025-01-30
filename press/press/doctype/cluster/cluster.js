@@ -4,6 +4,7 @@
 frappe.ui.form.on('Cluster', {
 	refresh: function (frm) {
 		[
+			[__('Prepare VPC'), 'prepare_vpc', frm.doc.status === 'Active'],
 			[__('Create Servers'), 'create_servers', frm.doc.status === 'Active'],
 			[__('Add Images'), 'add_images', frm.doc.status === 'Active'],
 		].forEach(([label, method, condition]) => {
@@ -11,7 +12,17 @@ frappe.ui.form.on('Cluster', {
 				frm.add_custom_button(
 					label,
 					() => {
-						frm.call(method).then((r) => frm.refresh());
+						frappe.confirm(
+							`Are you sure you want to ${label.toLowerCase()}?`,
+							() =>
+								frm.call(method).then((r) => {
+									if (r.message) {
+										frappe.msgprint(r.message);
+									} else {
+										frm.refresh();
+									}
+								}),
+						);
 					},
 					__('Actions'),
 				);

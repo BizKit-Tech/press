@@ -8,6 +8,7 @@ import ipaddress
 import re
 import time
 import typing
+import json
 from textwrap import wrap
 from typing import ClassVar, Generator
 
@@ -35,7 +36,8 @@ from oci.identity import IdentityClient
 from press.press.doctype.virtual_machine_image.virtual_machine_image import (
 	VirtualMachineImage,
 )
-from press.utils import get_current_team, unique
+from press.utils import get_current_team, unique, log_error
+from press.runner import Ansible
 
 if typing.TYPE_CHECKING:
 	from press.press.doctype.press_settings.press_settings import PressSettings
@@ -73,7 +75,9 @@ class Cluster(Document):
 		route_table_id: DF.Data | None
 		security_group_id: DF.Data | None
 		ssh_key: DF.Link | None
-		status: DF.Literal["Active", "Copying Images", "Archived"]
+		status: DF.Literal["Pending", "Active", "Copying Images", "Archived"]
+		subnet_2_cidr_block: DF.Data | None
+		subnet_2_id: DF.Data | None
 		subnet_cidr_block: DF.Data | None
 		subnet_id: DF.Data | None
 		team: DF.Link | None
@@ -846,3 +850,44 @@ class Cluster(Document):
 			filters={**filters, **extra_filters},
 			fields=["name", "title", "image", "beta"],
 		)
+	
+	@frappe.whitelist()
+	def prepare_vpc(self):
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		try:
+			ansible = Ansible(
+				playbook="cluster_vpc.yml",
+				server=frappe._dict({"doctype": self.doctype, "name": self.name, "ip": self.name.lower().replace(" ", "_")}),
+				user="ubuntu",
+				port=22,
+				variables={
+					"instance_name": self.name,
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+				},
+			)
+			play = ansible.run()
+			self.reload()
+			if play.status == "Success":
+				self.status = "Active"
+				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Create route table"})
+				task_result = json.loads(task.result)
+
+				self.vpc_id = task_result["invocation"]["module_args"]["vpc_id"]
+				self.subnet_id = task_result["invocation"]["module_args"]["subnets"][0]
+				self.subnet_2_id = task_result["invocation"]["module_args"]["subnets"][1]
+				self.route_table_id = task_result["route_table"]["route_table_id"]
+
+				self.cidr_block = "10.0.0.0/16"
+				self.subnet_cidr_block = "10.0.0.0/24"
+				self.subnet_2_cidr_block = "10.0.1.0/24"
+			else:
+				self.status = "Pending"
+		except Exception:
+			self.status = "Pending"
+			log_error("VPC Setup Exception", server=self.as_dict())
+		
+		self.save()
