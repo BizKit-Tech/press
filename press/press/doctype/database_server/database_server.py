@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import frappe
 from frappe.core.doctype.version.version import get_diff
@@ -415,7 +415,11 @@ class DatabaseServer(BaseServer):
 		if not self.backup_window_start_time or not self.backup_window_duration:
 			return default
 
+		utc8_offset = timedelta(hours=8)
+
 		start_dt = datetime.strptime(f"{self.backup_window_start_time}", "%H:%M:%S")
+		start_dt = start_dt.replace(tzinfo=timezone.utc) - utc8_offset
+
 		end_dt = start_dt + timedelta(seconds=self.backup_window_duration)
 
 		start_formatted = start_dt.strftime("%H:%M")
@@ -435,10 +439,15 @@ class DatabaseServer(BaseServer):
 		):
 			return default
 
-		day = self.maintenance_window_start_day[:3].lower()
-		start_dt = datetime.strptime(
-			f"{day} {self.maintenance_window_start_time}", "%a %H:%M:%S"
-		)
+		utc8_offset = timedelta(hours=8)
+
+		day = self.maintenance_window_start_day[:3]
+		reference_date = datetime(2023, 1, 1)  # A known Sunday, for reference
+		start_day_index = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].index(day)
+
+		start_dt = reference_date + timedelta(days=start_day_index) + self.maintenance_window_start_time
+		start_dt = start_dt.replace(second=0, microsecond=0)
+		start_dt = start_dt.replace(tzinfo=timezone.utc) - utc8_offset
 
 		end_dt = start_dt + timedelta(seconds=self.maintenance_window_duration)
 
