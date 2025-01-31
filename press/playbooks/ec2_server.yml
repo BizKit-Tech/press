@@ -12,6 +12,8 @@
     instance_environment: '{{ instance_environment }}'
     environment_abbr: '{{ environment_abbr }}'
     ports: '{{ ports }}'
+    vpc_id: '{{ vpc_id }}'
+    subnet_1: '{{ subnet_1_id }}'
+    subnet_2: '{{ subnet_2_id }}'
   roles:
-    - role: prepare_vpc
     - role: deploy_ec2

@@ -4,7 +4,7 @@
     name: '{{ sec_group }}'
     description: '{{ instance_name }} {{ environment_abbr }} settings'
     region: '{{ region }}'
-    vpc_id: '{{ vpc.vpc.id }}'
+    vpc_id: '{{ vpc_id }}'
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
     rules:
@@ -16,6 +16,7 @@
         ports: '{{ ports }}'
         cidr_ip: 0.0.0.0/0
     tags:
+      Name: '{{ instance_name }} {{ instance_environment }}'
       Environment: '{{ instance_environment }}'
       Project: '{{ instance_name }}'
       FrappePress: Yes
@@ -24,7 +25,7 @@
   amazon.aws.ec2_instance:
     name: '{{ instance_name }} {{ instance_environment }}'
     key_name: '{{ key_name }}'
-    vpc_subnet_id: '{{ subnet1.subnet.id }}'
+    vpc_subnet_id: '{{ subnet_1_id }}'
     instance_type: '{{ instance_type }}'
     security_group: '{{ sec_group }}'
     aws_access_key: '{{ ec2_access_key }}'

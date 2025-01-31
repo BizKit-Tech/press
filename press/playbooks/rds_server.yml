@@ -13,6 +13,8 @@
     max_allocated_storage: '{{ max_storage }}'
     backup_window: '{{ backup_window }}' # hh24:mi-hh24:mi
     maintenance_window: '{{ maintenance_window }}' # ddd:hh24:mi-ddd:hh24:mi
+    vpc_id: '{{ vpc_id }}'
+    subnet_1: '{{ subnet_1_id }}'
+    subnet_2: '{{ subnet_2_id }}'
   roles:
-    - role: prepare_vpc
     - role: deploy_rds
