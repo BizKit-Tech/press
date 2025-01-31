@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  become: yes
+  gather_facts: no
+  vars:
+    rds_instance_id: '{{ rds_instance_id }}'
+    new_sec_group: '{{ new_sec_group }}'
+    ec2_sec_group: '{{ ec2_sec_group }}'
+    region: ap-southeast-1
+    vpc_id: '{{ vpc_id }}'
+  roles:
+    - role: ec2_rds_security_group

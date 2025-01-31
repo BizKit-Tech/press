@@ -37,6 +37,7 @@
   "networking_section",
   "ip",
   "instance_id",
+  "security_group",
   "column_break_3",
   "private_ip",
   "private_mac_address",
@@ -54,6 +55,7 @@
   "database_name",
   "self_hosted_mariadb_server",
   "is_managed_database",
+  "is_connected_to_database",
   "column_break_jdiy",
   "self_hosted_mariadb_root_password",
   "managed_database_service",
@@ -96,8 +98,7 @@
    "fieldname": "ip",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "IP",
-   "set_only_once": 1
+   "label": "IP"
   },
   {
    "fieldname": "proxy_server",
@@ -382,8 +383,7 @@
    "label": "Is Self Hosted"
   },
   {
-   "default": "root",
-   "depends_on": "eval:doc.is_self_hosted",
+   "default": "ubuntu",
    "fieldname": "ssh_user",
    "fieldtype": "Data",
    "label": "SSH User"
@@ -581,8 +581,7 @@
   {
    "fieldname": "instance_type",
    "fieldtype": "Data",
-   "label": "Instance Type",
-   "read_only": 1
+   "label": "Instance Type"
   },
   {
    "fieldname": "vcpu",
@@ -605,10 +604,23 @@
    "fieldtype": "Int",
    "label": "Volume Size (GB)",
    "read_only": 1
+  },
+  {
+   "fieldname": "security_group",
+   "fieldtype": "Data",
+   "label": "Security Group",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_connected_to_database",
+   "fieldtype": "Check",
+   "label": "Is Connected to Database",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2025-01-23 17:35:47.716866",
+ "modified": "2025-01-30 21:07:47.606105",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",

@@ -1,0 +1,31 @@
+---
+- name: Allow communication between EC2 and RDS
+  amazon.aws.ec2_security_group:
+    name: '{{ new_sec_group }}'
+    description: '{{ instance_name }} database settings'
+    region: '{{ region }}'
+    vpc_id: '{{ vpc_id }}'
+    rules:
+      - proto: tcp
+        ports:
+          - 3306
+        group_id: '{{ ec2_sec_group }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Name: '{{ instance_name }} Database'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+  register: security_group
+
+- name: Add security group to RDS instance
+  amazon.aws.rds_instance:
+    id: '{{ rds_instance_id }}'
+    region: '{{ region }}'
+    state: present
+    vpc_security_group_ids:
+      - '{{ security_group.group_id }}'
+    purge_security_groups: false
+    apply_immediately: true
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'

@@ -74,6 +74,7 @@ class DatabaseServer(BaseServer):
 		public: DF.Check
 		ram: DF.Float
 		root_public_key: DF.Code | None
+		security_group: DF.Data | None
 		self_hosted_mariadb_server: DF.Data | None
 		self_hosted_server_domain: DF.Data | None
 		server_id: DF.Int
@@ -358,6 +359,11 @@ class DatabaseServer(BaseServer):
 		aws_access_key_id = settings.aws_access_key_id
 		aws_secret_access_key = settings.get_password("aws_secret_access_key")
 
+		cluster = frappe.get_doc("Cluster", self.cluster)
+		vpc_id = cluster.vpc_id
+		subnet_1_id = cluster.subnet_id
+		subnet_2_id = cluster.subnet_2_id
+
 		try:
 			ansible = Ansible(
 				playbook="rds_server.yml",
@@ -376,6 +382,9 @@ class DatabaseServer(BaseServer):
 					"maintenance_window": self.format_maintenance_window(),
 					"ec2_access_key": aws_access_key_id,
 					"ec2_secret_key": aws_secret_access_key,
+					"vpc_id": vpc_id,
+					"subnet_1_id": subnet_1_id,
+					"subnet_2_id": subnet_2_id,
 				},
 			)
 			play = ansible.run()
@@ -384,6 +393,12 @@ class DatabaseServer(BaseServer):
 			if play.status == "Success":
 				self.status = "Active"
 				self.is_server_setup = True
+
+				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Provision an RDS instance"})
+				task_result = json.loads(task.result)
+
+				self.ip = task_result["endpoint"]["address"]
+				self.security_group = task_result["vpc_security_groups"][0]["vpc_security_group_id"]
 
 				self.process_hybrid_server_setup()
 			else:

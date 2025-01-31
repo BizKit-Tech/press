@@ -1315,6 +1315,7 @@ class Server(BaseServer):
 		instance_ram: DF.Int
 		instance_type: DF.Data | None
 		ip: DF.Data | None
+		is_connected_to_database: DF.Check
 		is_managed_database: DF.Check
 		is_primary: DF.Check
 		is_replication_setup: DF.Check
@@ -1338,6 +1339,7 @@ class Server(BaseServer):
 		public: DF.Check
 		ram: DF.Float
 		root_public_key: DF.Code | None
+		security_group: DF.Data | None
 		self_hosted_mariadb_root_password: DF.Password | None
 		self_hosted_mariadb_server: DF.Data | None
 		self_hosted_server_domain: DF.Data | None
@@ -1501,11 +1503,16 @@ class Server(BaseServer):
 		aws_secret_access_key = settings.get_password("aws_secret_access_key")
 		ami_id = settings.default_ami
 
-		environment_abbr = "prod" if self.environment == "Production" else "dev"
+		cluster = frappe.get_doc("Cluster", self.cluster)
+		vpc_id = cluster.vpc_id
+		subnet_1_id = cluster.subnet_id
+		subnet_2_id = cluster.subnet_2_id
 
-		if environment_abbr == "prod":
+		if self.environment == "Production":
+			environment_abbr = "prod"
 			ports = [80, 443]
 		else:
+			environment_abbr = "dev"
 			ports = [8000]
 
 		try:
@@ -1524,6 +1531,9 @@ class Server(BaseServer):
 					"instance_environment": self.environment,
 					"environment_abbr": environment_abbr,
 					"ports": ports,
+					"vpc_id": vpc_id,
+					"subnet_1_id": subnet_1_id,
+					"subnet_2_id": subnet_2_id,
 				},
 			)
 			play = ansible.run()
@@ -1535,15 +1545,56 @@ class Server(BaseServer):
 				
 				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Get instance facts"})
 				task_result = json.loads(task.result)
+				instance = task_result["instances"][0]
 
-				self.instance_id = task_result[0].get("instance_id")
-				self.ip = task_result[0].get("public_ip_address")
-				self.private_ip = task_result[0].get("private_dns_name")
+				self.instance_id = instance["instance_id"]
+				self.ip = instance["public_ip_address"]
+				self.private_ip = instance["private_dns_name"]
+				self.security_group = instance["security_groups"][0]["group_id"]
 			else:
 				self.status = "Broken"
 		except Exception:
 			self.status = "Broken"
 			log_error("Server Setup Exception", server=self.as_dict())
+		self.save()
+
+	@frappe.whitelist()
+	def connect_to_rds(self):
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		rds_endpoint = frappe.db.get_value("Database Server", self.database_server, "ip")
+		rds_intance_id = rds_endpoint.split(".")[0]
+
+		rds_title = frappe.db.get_value("Database Server", self.database_server, "title")
+
+		vpc_id = frappe.db.get_value("Cluster", self.cluster, "vpc_id")
+
+		try:
+			ansible = Ansible(
+				playbook="modify_security_group.yml",
+				server=self,
+				user=self._ssh_user(),
+				port=self._ssh_port(),
+				variables={
+					"rds_instance_id": rds_intance_id,
+					"instance_name": rds_title,
+					"vpc_id": vpc_id,
+					"new_sec_group": f"{self.hostname_abbreviation}-ec2-rds",
+					"ec2_sec_group": self.security_group,
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+				},
+			)
+			play = ansible.run()
+			self.reload()
+			if play.status == "Success":
+				self.is_connected_to_database = True
+			else:
+				log_error("EC2 to RDS Connection Exception", server=self.as_dict())
+		except Exception:
+			log_error("EC2 to RDS Connection Exception", server=self.as_dict())
 		self.save()
 
 	def get_proxy_ip(self):
