@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from datetime import datetime, timedelta, timezone
 
 import frappe
 from frappe.core.doctype.version.version import get_diff
@@ -26,16 +27,16 @@ class DatabaseServer(BaseServer):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
-		from press.press.doctype.database_server_mariadb_variable.database_server_mariadb_variable import (
-			DatabaseServerMariaDBVariable,
-		)
+		from press.press.doctype.database_server_mariadb_variable.database_server_mariadb_variable import DatabaseServerMariaDBVariable
 		from press.press.doctype.resource_tag.resource_tag import ResourceTag
 		from press.press.doctype.server_mount.server_mount import ServerMount
 
 		agent_password: DF.Password | None
 		auto_add_storage_max: DF.Int
 		auto_add_storage_min: DF.Int
+		backup_retention_period: DF.Int
+		backup_window_duration: DF.Duration | None
+		backup_window_start_time: DF.Time | None
 		cluster: DF.Link | None
 		domain: DF.Link | None
 		frappe_public_key: DF.Code | None
@@ -43,6 +44,7 @@ class DatabaseServer(BaseServer):
 		has_data_volume: DF.Check
 		hostname: DF.Data
 		hostname_abbreviation: DF.Data | None
+		instance_type: DF.Data | None
 		ip: DF.Data | None
 		is_performance_schema_enabled: DF.Check
 		is_primary: DF.Check
@@ -52,6 +54,9 @@ class DatabaseServer(BaseServer):
 		is_server_renamed: DF.Check
 		is_server_setup: DF.Check
 		is_stalk_setup: DF.Check
+		maintenance_window_duration: DF.Duration | None
+		maintenance_window_start_day: DF.Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+		maintenance_window_start_time: DF.Time | None
 		mariadb_root_password: DF.Password | None
 		mariadb_system_variables: DF.Table[DatabaseServerMariaDBVariable]
 		memory_allocator: DF.Literal["System", "jemalloc", "TCMalloc"]
@@ -65,10 +70,11 @@ class DatabaseServer(BaseServer):
 		private_ip: DF.Data | None
 		private_mac_address: DF.Data | None
 		private_vlan_id: DF.Data | None
-		provider: DF.Literal["Generic", "Scaleway", "AWS EC2", "OCI"]
+		provider: DF.Literal["Generic", "Scaleway", "AWS RDS", "AWS EC2", "OCI"]
 		public: DF.Check
 		ram: DF.Float
 		root_public_key: DF.Code | None
+		security_group: DF.Data | None
 		self_hosted_mariadb_server: DF.Data | None
 		self_hosted_server_domain: DF.Data | None
 		server_id: DF.Int
@@ -83,6 +89,7 @@ class DatabaseServer(BaseServer):
 		stalk_threshold: DF.Int
 		stalk_variable: DF.Data | None
 		status: DF.Literal["Pending", "Installing", "Active", "Broken", "Archived"]
+		storage_size: DF.Int
 		tags: DF.Table[ResourceTag]
 		team: DF.Link | None
 		title: DF.Data | None
@@ -346,30 +353,38 @@ class DatabaseServer(BaseServer):
 				self.server_id = 1
 
 	def _setup_server(self):
-		config = self._get_config()
+		# config = self._get_config()
+
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		cluster = frappe.get_doc("Cluster", self.cluster)
+		vpc_id = cluster.vpc_id
+		subnet_1_id = cluster.subnet_id
+		subnet_2_id = cluster.subnet_2_id
+
 		try:
 			ansible = Ansible(
-				playbook="self_hosted_db.yml" if getattr(self, "is_self_hosted", False) else "database.yml",
+				playbook="rds_server.yml",
 				server=self,
-				user=self.ssh_user or "root",
+				user=self.ssh_user or "ubuntu",
 				port=self.ssh_port or 22,
 				variables={
-					"server": self.name,
-					"workers": "2",
-					"agent_password": config.agent_password,
-					"agent_repository_url": config.agent_repository_url,
-					"monitoring_password": config.monitoring_password,
-					"log_server": config.log_server,
-					"kibana_password": config.kibana_password,
-					"private_ip": self.private_ip,
-					"server_id": self.server_id,
-					"allocator": self.memory_allocator.lower(),
-					"mariadb_root_password": config.mariadb_root_password,
-					"certificate_private_key": config.certificate.private_key,
-					"certificate_full_chain": config.certificate.full_chain,
-					"certificate_intermediate_chain": config.certificate.intermediate_chain,
-					"mariadb_depends_on_mounts": self.mariadb_depends_on_mounts,
-					**self.get_mount_variables(),
+					"instance_name": self.title,
+					"instance_abbr": self.hostname_abbreviation,
+					"instance_type": self.instance_type,
+					"storage_size": self.storage_size,
+					"backup_retention_period": self.backup_retention_period,
+					"db_password": self.get_password("mariadb_root_password"),
+					"max_allocated_storage": self.auto_add_storage_max,
+					"backup_window": self.format_backup_window(),
+					"maintenance_window": self.format_maintenance_window(),
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+					"vpc_id": vpc_id,
+					"subnet_1_id": subnet_1_id,
+					"subnet_2_id": subnet_2_id,
 				},
 			)
 			play = ansible.run()
@@ -379,6 +394,12 @@ class DatabaseServer(BaseServer):
 				self.status = "Active"
 				self.is_server_setup = True
 
+				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Provision an RDS instance"})
+				task_result = json.loads(task.result)
+
+				self.ip = task_result["endpoint"]["address"]
+				self.security_group = task_result["vpc_security_groups"][0]["vpc_security_group_id"]
+
 				self.process_hybrid_server_setup()
 			else:
 				self.status = "Broken"
@@ -386,6 +407,55 @@ class DatabaseServer(BaseServer):
 			self.status = "Broken"
 			log_error("Database Server Setup Exception", server=self.as_dict())
 		self.save()
+
+	def format_backup_window(self):
+		# hh24:mi-hh24:mi
+
+		default = "19:00-22:00"
+		if not self.backup_window_start_time or not self.backup_window_duration:
+			return default
+
+		utc8_offset = timedelta(hours=8)
+
+		start_dt = datetime.strptime(f"{self.backup_window_start_time}", "%H:%M:%S")
+		start_dt = start_dt.replace(tzinfo=timezone.utc) - utc8_offset
+
+		end_dt = start_dt + timedelta(seconds=self.backup_window_duration)
+
+		start_formatted = start_dt.strftime("%H:%M")
+		end_formatted = end_dt.strftime("%H:%M")
+		formatted_window = f"{start_formatted}-{end_formatted}"
+
+		return formatted_window
+
+	def format_maintenance_window(self):
+		# ddd:hh24:mi-ddd:hh24:mi
+
+		default = "sat:22:30-sat:23:30"
+		if (
+			not self.maintenance_window_start_day
+			or not self.maintenance_window_start_time
+			or not self.maintenance_window_duration
+		):
+			return default
+
+		utc8_offset = timedelta(hours=8)
+
+		day = self.maintenance_window_start_day[:3]
+		reference_date = datetime(2023, 1, 1)  # A known Sunday, for reference
+		start_day_index = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].index(day)
+
+		start_dt = reference_date + timedelta(days=start_day_index) + self.maintenance_window_start_time
+		start_dt = start_dt.replace(second=0, microsecond=0)
+		start_dt = start_dt.replace(tzinfo=timezone.utc) - utc8_offset
+
+		end_dt = start_dt + timedelta(seconds=self.maintenance_window_duration)
+
+		start_formatted = start_dt.strftime("%a:%H:%M")
+		end_formatted = end_dt.strftime("%a:%H:%M")
+		formatted_window = f"{start_formatted}-{end_formatted}".lower()
+
+		return formatted_window
 
 	def _get_config(self):
 		certificate_name = frappe.db.get_value(

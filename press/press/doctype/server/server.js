@@ -198,6 +198,12 @@ frappe.ui.form.on('Server', {
 				true,
 				frm.doc.virtual_machine && frm.doc.mounts,
 			],
+			[
+				__('Connect to RDS'),
+				'connect_to_rds',
+				true,
+				frm.doc.database_server && !frm.doc.is_connected_to_database,
+			],
 		].forEach(([label, method, confirm, condition]) => {
 			if (typeof condition === 'undefined' || condition) {
 				frm.add_custom_button(

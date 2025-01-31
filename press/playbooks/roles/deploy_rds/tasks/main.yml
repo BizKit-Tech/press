@@ -1,0 +1,73 @@
+---
+- name: Create security group
+  amazon.aws.ec2_security_group:
+    name: '{{ sec_group }}'
+    description: '{{ instance_name }} database settings'
+    region: '{{ region }}'
+    vpc_id: '{{ vpc_id }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    rules:
+      - proto: tcp
+        ports:
+          - 3306
+        cidr_ip: 0.0.0.0/0
+    tags:
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+  register: security_group
+
+- name: Create a DB subnet group
+  amazon.aws.rds_subnet_group:
+    name: '{{ instance_abbr }}-db'
+    description: '{{ instance_name }} database subnet group'
+    region: '{{ region }}'
+    subnets:
+      - '{{ subnet_1 }}'
+      - '{{ subnet_2 }}'
+    state: present
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
+  register: subnet_group
+
+- name: Provision an RDS instance
+  amazon.aws.rds_instance:
+    db_instance_identifier: '{{ instance_abbr }}-db'
+    allocated_storage: '{{ storage_size }}'
+    allow_major_version_upgrade: false
+    auto_minor_version_upgrade: true
+    availability_zone: ap-southeast-1a
+    backup_retention_period: '{{ backup_retention_period }}'
+    copy_tags_to_snapshot: true
+    db_instance_class: '{{ instance_type }}'
+    db_parameter_group_name: frappe-mariadb-10-6
+    db_subnet_group_name: '{{ subnet_group.subnet_group.db_subnet_group_name }}'
+    deletion_protection: true
+    enable_cloudwatch_logs_exports:
+      - audit
+      - error
+      - general
+      - slowquery
+    engine: mariadb
+    engine_version: 10.6.18
+    master_user_password: '{{ db_password }}'
+    master_username: admin
+    max_allocated_storage: '{{ max_allocated_storage }}'
+    preferred_backup_window: '{{ backup_window }}'
+    preferred_maintenance_window: '{{ maintenance_window }}'
+    publicly_accessible: false
+    read_replica: false
+    region: '{{ region }}'
+    storage_encrypted: true
+    storage_type: gp3
+    vpc_security_group_ids:
+      - '{{ security_group.group_id }}'
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    tags:
+      Name: '{{ instance_name }} Database'
+      Project: '{{ instance_name }}'
+      FrappePress: Yes
