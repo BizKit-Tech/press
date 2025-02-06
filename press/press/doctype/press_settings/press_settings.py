@@ -55,6 +55,7 @@ class PressSettings(Document):
 		default_apps: DF.Table[AppGroup]
 		default_outgoing_id: DF.Data | None
 		default_outgoing_pass: DF.Data | None
+		default_ssh_key: DF.Attach | None
 		disable_agent_job_deduplication: DF.Check
 		disable_auto_retry: DF.Check
 		docker_registry_namespace: DF.Data | None

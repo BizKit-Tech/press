@@ -179,6 +179,8 @@
   "use_staging_ca",
   "ssh_section",
   "ssh_certificate_authority",
+  "column_break_ltqg",
+  "default_ssh_key",
   "bench_section",
   "redis_cache_size",
   "monitoring_section",
@@ -1321,11 +1323,21 @@
    "fieldname": "default_ami",
    "fieldtype": "Data",
    "label": "Default AMI"
+  },
+  {
+   "fieldname": "column_break_ltqg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Private key file for SSH access to remote servers",
+   "fieldname": "default_ssh_key",
+   "fieldtype": "Attach",
+   "label": "Default SSH Key"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2025-01-23 19:55:25.951088",
+ "modified": "2025-02-04 19:30:46.938337",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Press Settings",
