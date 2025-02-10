@@ -114,7 +114,6 @@ class Site(Document, TagHelpers):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
 		from press.press.doctype.resource_tag.resource_tag import ResourceTag
 		from press.press.doctype.site_app.site_app import SiteApp
 		from press.press.doctype.site_config.site_config import SiteConfig
@@ -149,6 +148,7 @@ class Site(Document, TagHelpers):
 		notify_email: DF.Data | None
 		only_update_at_specified_time: DF.Check
 		plan: DF.Link | None
+		product: DF.Literal["ERP", "HRIS", "ERP and HRIS"]
 		remote_config_file: DF.Link | None
 		remote_database_file: DF.Link | None
 		remote_private_file: DF.Link | None
@@ -164,20 +164,17 @@ class Site(Document, TagHelpers):
 		staging: DF.Check
 		standby_for: DF.Link | None
 		standby_for_product: DF.Link | None
-		status: DF.Literal[
-			"Pending", "Installing", "Updating", "Active", "Inactive", "Broken", "Archived", "Suspended"
-		]
+		status: DF.Literal["Pending", "Installing", "Updating", "Active", "Inactive", "Broken", "Archived", "Suspended"]
 		status_before_update: DF.Data | None
 		subdomain: DF.Data
 		tags: DF.Table[ResourceTag]
 		team: DF.Link
+		tenancy: DF.Literal["Dedicated", "Shared"]
 		timezone: DF.Data | None
 		trial_end_date: DF.Date | None
 		update_end_of_month: DF.Check
 		update_on_day_of_month: DF.Int
-		update_on_weekday: DF.Literal[
-			"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-		]
+		update_on_weekday: DF.Literal["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 		update_trigger_frequency: DF.Literal["Daily", "Weekly", "Monthly"]
 		update_trigger_time: DF.Time | None
 	# end: auto-generated types
