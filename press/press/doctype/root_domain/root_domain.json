@@ -14,13 +14,13 @@
  ],
  "fields": [
   {
-   "default": "AWS Route 53",
+   "default": "Generic",
    "fieldname": "dns_provider",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "DNS Provider",
-   "options": "AWS Route 53",
+   "options": "Generic\nAWS Route 53",
    "reqd": 1
   },
   {
@@ -31,13 +31,13 @@
    "fieldname": "aws_access_key_id",
    "fieldtype": "Data",
    "label": "AWS Access Key ID",
-   "reqd": 1
+   "mandatory_depends_on": "eval:doc.dns_provider !== \"Generic\";"
   },
   {
    "fieldname": "aws_secret_access_key",
    "fieldtype": "Password",
    "label": "AWS Secret Access Key",
-   "reqd": 1
+   "mandatory_depends_on": "eval:doc.dns_provider !== \"Generic\";"
   },
   {
    "fieldname": "default_cluster",
@@ -80,10 +80,11 @@
    "link_fieldname": "domain"
   }
  ],
- "modified": "2021-03-25 11:42:01.377832",
+ "modified": "2025-02-10 18:57:11.459860",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Root Domain",
+ "naming_rule": "Set by user",
  "owner": "Administrator",
  "permissions": [
   {
@@ -101,5 +102,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }

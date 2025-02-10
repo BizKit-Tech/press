@@ -24,13 +24,16 @@ class RootDomain(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		aws_access_key_id: DF.Data
-		aws_secret_access_key: DF.Password
+		aws_access_key_id: DF.Data | None
+		aws_secret_access_key: DF.Password | None
 		default_cluster: DF.Link
-		dns_provider: DF.Literal["AWS Route 53"]
+		dns_provider: DF.Literal["Generic", "AWS Route 53"]
 	# end: auto-generated types
 
 	def after_insert(self):
+		if self.dns_provider == "Generic":
+			return
+		
 		if not frappe.db.exists("TLS Certificate", {"wildcard": True, "domain": self.name}):
 			frappe.enqueue_doc(
 				self.doctype,
