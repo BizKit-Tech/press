@@ -59,7 +59,6 @@ class Bench(Document):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
 		from press.press.doctype.bench_app.bench_app import BenchApp
 		from press.press.doctype.bench_mount.bench_mount import BenchMount
 		from press.press.doctype.bench_variable.bench_variable import BenchVariable
@@ -72,7 +71,7 @@ class Bench(Document):
 		cluster: DF.Link
 		config: DF.Code | None
 		database_server: DF.Link | None
-		docker_image: DF.Data
+		docker_image: DF.Data | None
 		environment_variables: DF.Table[BenchVariable]
 		group: DF.Link
 		gunicorn_threads_per_worker: DF.Int
@@ -347,7 +346,8 @@ class Bench(Document):
 			agent.update_bench_config(self)
 
 	def after_insert(self):
-		self.create_agent_request()
+		if self.docker_image:
+			self.create_agent_request()
 
 	def create_agent_request(self):
 		agent = Agent(self.server)

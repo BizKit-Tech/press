@@ -51,6 +51,8 @@ from press.press.doctype.deploy_candidate.validations import PreBuildValidations
 from press.utils import get_current_team, log_error, reconnect_on_failure
 from press.utils.jobs import get_background_jobs, stop_background_job
 
+from press.press.doctype.deploy_candidate.site_setup import SiteSetup
+
 # build_duration, pending_duration are Time fields, >= 1 day is invalid
 MAX_DURATION = timedelta(hours=23, minutes=59, seconds=59)
 TRANSITORY_STATES = ["Scheduled", "Pending", "Preparing", "Running"]
@@ -291,12 +293,15 @@ class DeployCandidate(Document):
 		no_build: bool = False,
 		no_cache: bool = False,
 	):
-		self.pre_build(
-			method="_build",
-			no_push=no_push,
-			no_build=no_build,
-			no_cache=no_cache,
-		)
+		if is_suspended():
+			self._set_status_success()
+		else:
+			self.pre_build(
+				method="_build",
+				no_push=no_push,
+				no_build=no_build,
+				no_cache=no_cache,
+			)
 
 	@frappe.whitelist()
 	def fail_and_redeploy(self):
@@ -1537,6 +1542,16 @@ class DeployCandidate(Document):
 			frappe.get_doc("Site Group Deploy", site_group_deploy).update_site_group_deploy_on_deploy_failure(
 				self,
 			)
+
+	# TODO: Might need to be moved to Site doctype
+	@frappe.whitelist()
+	def deploy_site(self):
+		if self.status == "Draft":
+			self._set_status_pending()
+		servers = frappe.get_all("Release Group Server", {"parent": self.group}, pluck="server")
+		for server in servers:
+			site = SiteSetup(server)
+			site.execute()
 
 
 def can_pull_update(file_paths: list[str]) -> bool:
