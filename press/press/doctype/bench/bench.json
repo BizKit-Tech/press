@@ -175,8 +175,7 @@
    "fieldname": "docker_image",
    "fieldtype": "Data",
    "label": "Docker Image",
-   "read_only": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
    "fetch_from": "server.cluster",
@@ -368,7 +367,7 @@
   }
  ],
  "links": [],
- "modified": "2024-10-07 11:05:42.340197",
+ "modified": "2025-02-10 17:26:34.156441",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Bench",
