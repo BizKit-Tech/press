@@ -1304,7 +1304,7 @@ class Server(BaseServer):
 		database_server: DF.Link | None
 		disable_agent_job_auto_retry: DF.Check
 		domain: DF.Link | None
-		environment: DF.Literal["Development", "Production"]
+		environment: DF.Literal["Development", "Production", "Demo"]
 		frappe_public_key: DF.Code | None
 		frappe_user_password: DF.Password | None
 		has_data_volume: DF.Check

@@ -559,7 +559,7 @@
    "fieldname": "environment",
    "fieldtype": "Select",
    "label": "Environment",
-   "options": "Development\nProduction"
+   "options": "Development\nProduction\nDemo"
   },
   {
    "fieldname": "instance_id",
@@ -620,7 +620,7 @@
   }
  ],
  "links": [],
- "modified": "2025-01-30 21:07:47.606105",
+ "modified": "2025-02-10 13:39:56.420333",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",
