@@ -293,12 +293,15 @@ class DeployCandidate(Document):
 		no_build: bool = False,
 		no_cache: bool = False,
 	):
-		self.pre_build(
-			method="_build",
-			no_push=no_push,
-			no_build=no_build,
-			no_cache=no_cache,
-		)
+		if is_suspended():
+			self._set_status_success()
+		else:
+			self.pre_build(
+				method="_build",
+				no_push=no_push,
+				no_build=no_build,
+				no_cache=no_cache,
+			)
 
 	@frappe.whitelist()
 	def fail_and_redeploy(self):
