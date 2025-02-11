@@ -61,7 +61,17 @@ class SiteSetup:
         
         self.update_agent_job_status()
         self.close_remote_connection()
+        self.update_site_status()
         frappe.msgprint("Site setup completed. Please check the Agent Job for more details.")
+
+    def update_site_status(self):
+        if self.fail:
+            self.site.status = "Broken"
+        else:
+            self.site.status = "Active"
+            self.site.setup_wizard_complete = 1
+        self.site.save()
+        frappe.db.commit()
 
     def create_agent_job_type(self):
         if frappe.db.exists("Agent Job Type", "Site Setup"):
@@ -161,7 +171,7 @@ class SiteSetup:
         frappe.db.commit()
 
     def update_agent_job_status(self):
-        self.agent_job.status = "Success" if not self.fail else "Failure"
+        self.agent_job.status = "Failure" if self.fail else "Success"
         self.agent_job.end = now()
         self.agent_job.duration = min(self.agent_job.end - self.start_time, MAX_DURATION)
         self.agent_job.save()
