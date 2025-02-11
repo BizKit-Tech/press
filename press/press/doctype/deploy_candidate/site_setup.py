@@ -14,12 +14,12 @@ ENV_ABBR = {
     "Demo": "demo",
 }
 
-# TODO: Add more steps to the Agent Job Type
-# TODO: Assign values for the site_name, admin_password, company_name, and company_abbr
 
 class SiteSetup:
-    def __init__(self, server_name, verbose=False):
-        self.server_name = server_name
+    def __init__(self, site, verbose=False):
+        self.site = site
+        self.server_name = self.site.server
+        self.bench = self.site.bench
         self.verbose = verbose
         self.get_app_server_details()
         self.get_database_server_details()
@@ -38,16 +38,26 @@ class SiteSetup:
         self.rds_endpoint = db_server_doc.ip
         self.db_user = "admin"
         self.db_root_password = db_server_doc.get_password("mariadb_root_password")
-        self.db_name = f"db_server_doc.hostname_abbreviation_{ENV_ABBR[self.environment]}"
+        self.db_name = f"{db_server_doc.hostname_abbreviation}_{ENV_ABBR[self.environment]}"
 
     def execute(self):
         frappe.msgprint("Site setup started.")
         self.create_agent_job_type()
         self.create_agent_job()
         self.setup_remote_connection()
+        
         self.set_bench_path()
         self.update_apps()
-        # more commands to be added here
+        self.configure_database()
+        self.disable_bench_watch()
+        self.enable_automatic_bench_start()
+        self.setup_production()
+        self.create_site()
+        self.set_developer_mode()
+        self.restart_bench()
+        self.remove_fail2ban() 
+        self.run_initial_setup()
+        
         self.close_remote_connection()
         frappe.msgprint("Site setup completed. Please check the Agent Job for more details.")
 
@@ -125,6 +135,7 @@ class SiteSetup:
             "disabled_auto_retry": 1,
         })
         doc.insert()
+        frappe.db.commit()
 
     def create_agent_job(self):
         self.agent_job = frappe.get_doc({
@@ -139,19 +150,25 @@ class SiteSetup:
             "request_files": json.dumps({}),
             "output": "",
             "traceback": "",
+            "site": self.site.name,
+            "bench": self.bench,
         })
         self.agent_job.insert()
+        frappe.db.commit()
 
-    def update_agent_job_step(self, step, output, traceback, start_time):
+    def update_agent_job_step(self, step, start_time, output=None, traceback=None, skipped=False):
         doc = frappe.get_doc("Agent Job Step", {"step_name": step, "agent_job": self.agent_job.name})
         doc.duration = min(now() - start_time, MAX_DURATION)
-        doc.output = output
-        doc.traceback = traceback
-        if traceback:
-            doc.status = "Failure"
+        if skipped:
+            doc.status = "Skipped"
         else:
+            doc.output = output
+            doc.traceback = traceback
             doc.status = "Success"
+            if traceback:
+                doc.status = "Failure"
         doc.save()
+        frappe.db.commit()
 
     def setup_remote_connection(self):
         pkey = paramiko.RSAKey.from_private_key_file(get_ssh_key())
@@ -185,7 +202,7 @@ class SiteSetup:
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} update --pull --requirements --no-backup)'
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Update Apps", output, traceback, start_time)
+        self.update_agent_job_step("Update Apps", start_time, output, traceback)
 
     def configure_database(self):
         start_time = now()
@@ -196,29 +213,44 @@ class SiteSetup:
             f'source ~/.profile && mysql -h {self.rds_endpoint} -u {self.db_user} -P 3306 -p{self.db_root_password} -e "CREATE DATABASE {self.db_name};"',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Configure Database", output, traceback, start_time)
+        self.update_agent_job_step("Configure Database", start_time, output, traceback)
 
     def disable_bench_watch(self):
         start_time = now()
+        
+        if self.environment == "Production":
+            self.update_agent_job_step("Disable Bench Watch", start_time, skipped=True)
+            return
+        
         commands = [
             'echo "Disabling bench watch..."',
             f"source ~/.profile && sed -i 's/watch: bench watch/# watch: bench watch/' {self.frappe_bench_dir}/Procfile",
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Disable Bench Watch", output, traceback, start_time)
+        self.update_agent_job_step("Disable Bench Watch", start_time, output, traceback)
 
     def enable_automatic_bench_start(self):
         start_time = now()
+        
+        if self.environment == "Production":
+            self.update_agent_job_step("Enable Automatic Bench Start", start_time, skipped=True)
+            return
+        
         commands = [
             'echo "Enabling automatic bench start..."',
             'source ~/.profile && sudo systemctl enable bench-start.service',
             'source ~/.profile && sudo systemctl start bench-start.service',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Enable Automatic Bench Start", output, traceback, start_time)
+        self.update_agent_job_step("Enable Automatic Bench Start", start_time, output, traceback)
 
     def setup_production(self):
         start_time = now()
+        
+        if self.environment != "Production":
+            self.update_agent_job_step("Setup Production", start_time, skipped=True)
+            return
+        
         commands = [
             'echo "Setting up production..."',
             'source ~/.profile && sudo apt-get install -y python3-pip',
@@ -228,57 +260,76 @@ class SiteSetup:
             f'source ~/.profile && sudo {self.frappe_bench_dir} setup production ubuntu --yes # For restarting services',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Enable Automatic Bench Start", output, traceback, start_time)
+        self.update_agent_job_step("Setup Production", start_time, output, traceback)
 
     def create_site(self):
         start_time = now()
+        admin_password = self.site.get_password("admin_password")
         commands = [
             'echo "Creating site..."',
-            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} new-site --db-name {self.db_name} --mariadb-root-username {self.db_user} --mariadb-root-password {self.db_root_password} --admin-password {admin_password} {site_name} --force)',
-            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {site_name} install-app erpnext --run-patches)',
-            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {site_name} install-app bizkit_core --run-patches)',
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} new-site --db-name {self.db_name} --mariadb-root-username {self.db_user} --mariadb-root-password {self.db_root_password} --admin-password {admin_password} {self.server_abbr} --force)',
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app erpnext --run-patches)',
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app bizkit_core --run-patches)',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} migrate --skip-failing) # Workaround: migrate and skip failing patches before running update to build prereqs first',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} update --patch --build --no-backup)',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Enable Automatic Bench Start", output, traceback, start_time)
+        self.update_agent_job_step("Create Site", start_time, output, traceback)
 
     def set_developer_mode(self):
         start_time = now()
+        
+        if self.environment == "Production":
+            self.update_agent_job_step("Set Developer Mode", start_time, skipped=True)
+            return
+        
         commands = [
             'echo "Setting site to developer mode..."',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} set-config -g developer_mode 1)',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} clear-cache)',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Enable Automatic Bench Start", output, traceback, start_time)
+        self.update_agent_job_step("Set Developer Mode", start_time, output, traceback)
 
     def restart_bench(self):
         start_time = now()
+        
+        if self.environment == "Production":
+            self.update_agent_job_step("Restart Bench", start_time, skipped=True)
+            return
+        
         commands = [
             'echo "Restarting bench..."',
             'source ~/.profile && sudo systemctl restart bench-start.service',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Enable Automatic Bench Start", output, traceback, start_time)
+        self.update_agent_job_step("Restart Bench", start_time, output, traceback)
 
     def remove_fail2ban(self):
         start_time = now()
+        
+        if self.environment != "Production":
+            self.update_agent_job_step("Remove Fail2Ban", start_time, skipped=True)
+            return
+        
         commands = [
             'echo "Removing fail2ban..."',
             'source ~/.profile && sudo apt-get remove --auto-remove fail2ban --yes',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Enable Automatic Bench Start", output, traceback, start_time)
+        self.update_agent_job_step("Remove Fail2Ban", start_time, output, traceback)
 
     def run_initial_setup(self):
         start_time = now()
+        hris_config = ""
+        if "HRIS" in self.site.product:
+            hris_config = "--include-hris-config"
         commands = [
             'echo "Running initial setup..."',
-            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} run-initial-setup --company-name "{company_name}" --company-abbreviation "{company_abbr}" --mariadb-root-login {self.db_user} --mariadb-root-password {self.db_root_password} --keep-active-domains --force-create-db)',
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} run-initial-setup --company-name "{self.site.company_name}" --company-abbreviation "{self.site.company_name_abbreviation}" --mariadb-root-login {self.db_user} --mariadb-root-password {self.db_root_password} --keep-active-domains --force-create-db {hris_config})',
         ]
         output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Enable Automatic Bench Start", output, traceback, start_time)
+        self.update_agent_job_step("Run Initial Setup", start_time, output, traceback)
 
 
 def get_ssh_key():
