@@ -95,6 +95,11 @@ frappe.ui.form.on('Site', {
 			);
 		});
 		[
+			[__('Install'), 'install_site', 
+				!['Active', 'Archived', 'Inactive', 'Suspended'].includes(
+					frm.doc.status,
+				),
+			],
 			[__('Archive'), 'archive', frm.doc.status !== 'Archived'],
 			[__('Cleanup after Archive'), 'cleanup_after_archive'],
 			[__('Sync Apps'), 'sync_apps'],

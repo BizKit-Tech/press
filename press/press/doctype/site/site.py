@@ -86,6 +86,7 @@ from press.utils import (
 	unique,
 )
 from press.utils.dns import _change_dns_record, create_dns_record
+from press.press.doctype.site.site_setup import SiteSetup
 
 if TYPE_CHECKING:
 	from datetime import datetime
@@ -129,6 +130,8 @@ class Site(Document, TagHelpers):
 		backup_time: DF.Time | None
 		bench: DF.Link
 		cluster: DF.Link
+		company_name: DF.Data
+		company_name_abbreviation: DF.Data
 		config: DF.Code | None
 		configuration: DF.Table[SiteConfig]
 		current_cpu_usage: DF.Int
@@ -744,7 +747,7 @@ class Site(Document, TagHelpers):
 		log_site_activity(self.name, "Create")
 		self._create_default_site_domain()
 		create_dns_record(self, record_name=self._get_site_name(self.subdomain))
-		self.create_agent_request()
+		# self.create_agent_request()
 
 		if hasattr(self, "share_details_consent") and self.share_details_consent:
 			# create partner lead
@@ -2898,6 +2901,16 @@ class Site(Document, TagHelpers):
 			"message": "Database index will be added on site.",
 			"job_name": job.name,
 		}
+	
+	@frappe.whitelist()
+	def install_site(self):
+		frappe.enqueue(self._install_site, queue="long", job_name=f"install_site_{self.name}")
+		self.status = "Installing"
+		self.save()
+
+	def _install_site(self):
+		site = SiteSetup(self)
+		site.execute()
 
 
 def site_cleanup_after_archive(site):
