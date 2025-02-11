@@ -408,6 +408,10 @@ ${r.message.error}
 			__('Dangerous Actions'),
 		);
 	},
+	company_name: function (frm) {
+		const company_abbr = frm.doc.company_name.split(' ').map(word => word[0]).join('');
+		frm.set_value('company_name_abbreviation', company_abbr.toUpperCase());
+	},
 });
 
 function login_as_admin(site_name, reason = null) {
