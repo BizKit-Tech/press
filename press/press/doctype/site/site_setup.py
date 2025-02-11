@@ -23,6 +23,7 @@ class SiteSetup:
         self.verbose = verbose
         self.get_app_server_details()
         self.get_database_server_details()
+        self.fail = False
 
     def get_app_server_details(self):
         server_doc = frappe.get_doc("Server", self.server_name)
@@ -58,6 +59,7 @@ class SiteSetup:
         self.remove_fail2ban() 
         self.run_initial_setup()
         
+        self.update_agent_job_status()
         self.close_remote_connection()
         frappe.msgprint("Site setup completed. Please check the Agent Job for more details.")
 
@@ -138,12 +140,14 @@ class SiteSetup:
         frappe.db.commit()
 
     def create_agent_job(self):
+        self.start_time = now()
         self.agent_job = frappe.get_doc({
             "doctype": "Agent Job",
             "job_type": "Site Setup",
             "server_type": "Server",
             "server": self.server_name,
-            "status": "Undelivered",
+            "start": self.start_time,
+            "status": "Running",
             "request_method": "POST",
             "request_path": "None",
             "request_data": json.dumps({}),
@@ -156,6 +160,13 @@ class SiteSetup:
         self.agent_job.insert()
         frappe.db.commit()
 
+    def update_agent_job_status(self):
+        self.agent_job.status = "Success" if not self.fail else "Failure"
+        self.agent_job.end = now()
+        self.agent_job.duration = min(self.agent_job.end - self.start_time, MAX_DURATION)
+        self.agent_job.save()
+        frappe.db.commit()
+
     def update_agent_job_step(self, step, start_time, output=None, traceback=None, skipped=False):
         doc = frappe.get_doc("Agent Job Step", {"step_name": step, "agent_job": self.agent_job.name})
         doc.duration = min(now() - start_time, MAX_DURATION)
@@ -166,6 +177,7 @@ class SiteSetup:
             doc.traceback = traceback
             doc.status = "Success"
             if traceback:
+                self.fail = True
                 doc.status = "Failure"
         doc.save()
         frappe.db.commit()
