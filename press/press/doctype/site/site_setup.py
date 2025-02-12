@@ -344,11 +344,13 @@ class SiteSetup:
     def run_initial_setup(self):
         start_time = now()
         hris_config = ""
+        answer_no = "yes n | "
         if "HRIS" in self.site.product:
             hris_config = "--include-hris-config"
+            answer_no = ""
         commands = [
             'echo "Running initial setup..."',
-            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} run-initial-setup --company-name "{self.site.company_name}" --company-abbreviation "{self.site.company_name_abbreviation}" --mariadb-root-login {self.db_user} --mariadb-root-password {self.db_root_password} --keep-active-domains --force-create-db {hris_config})',
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && {answer_no}{self.bench_path} run-initial-setup --company-name "{self.site.company_name}" --company-abbreviation "{self.site.company_name_abbreviation}" --mariadb-root-login {self.db_user} --mariadb-root-password {self.db_root_password} --keep-active-domains --force-create-db {hris_config})',
         ]
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Run Initial Setup", start_time, output, traceback)
