@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 import frappe
 from frappe.utils import now_datetime as now
+from press.utils import log_error
 
 
 MAX_DURATION = timedelta(hours=23, minutes=59, seconds=59)
@@ -47,17 +48,18 @@ class SiteSetup:
         self.create_agent_job()
         self.setup_remote_connection()
         
-        self.set_bench_path()
-        self.update_apps()
-        self.configure_database()
-        self.disable_bench_watch()
-        self.enable_automatic_bench_start()
-        self.setup_production()
-        self.create_site()
-        self.set_developer_mode()
-        self.restart_bench()
-        self.remove_fail2ban() 
-        self.run_initial_setup()
+        if self.client:
+            self.set_bench_path()
+            self.update_apps()
+            self.configure_database()
+            self.disable_bench_watch()
+            self.enable_automatic_bench_start()
+            self.setup_production()
+            self.create_site()
+            self.set_developer_mode()
+            self.restart_bench()
+            self.remove_fail2ban() 
+            self.run_initial_setup()
         
         self.update_agent_job_status()
         self.close_remote_connection()
@@ -65,6 +67,7 @@ class SiteSetup:
         frappe.msgprint("Site setup completed. Please check the Agent Job for more details.")
 
     def update_site_status(self):
+        self.site.reload()
         if self.fail:
             self.site.status = "Broken"
         else:
@@ -171,6 +174,7 @@ class SiteSetup:
         frappe.db.commit()
 
     def update_agent_job_status(self):
+        self.agent_job.reload()
         self.agent_job.status = "Failure" if self.fail else "Success"
         self.agent_job.end = now()
         self.agent_job.duration = min(self.agent_job.end - self.start_time, MAX_DURATION)
@@ -193,13 +197,19 @@ class SiteSetup:
         frappe.db.commit()
 
     def setup_remote_connection(self):
-        pkey = paramiko.RSAKey.from_private_key_file(get_ssh_key())
-        self.client = paramiko.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.client.connect(self.server_ip, port=self.server_port, username=self.server_username, pkey=pkey)
+        try:
+            pkey = paramiko.RSAKey.from_private_key_file(get_ssh_key())
+            self.client = paramiko.SSHClient()
+            self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.client.connect(self.server_ip, port=self.server_port, username=self.server_username, pkey=pkey)
+        except Exception as e:
+            self.fail = True
+            self.client = 0
+            log_error("Site Setup Error: Failed to connect to server", data=e)
 
     def close_remote_connection(self):
-        self.client.close()
+        if self.client:
+            self.client.close()
 
     def execute_commands(self, commands):
         output = ""
