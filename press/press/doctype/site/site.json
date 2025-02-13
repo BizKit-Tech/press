@@ -6,6 +6,8 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "company_name",
+  "company_name_abbreviation",
   "subdomain",
   "domain",
   "status",
@@ -14,6 +16,8 @@
   "archive_failed",
   "column_break_3",
   "bench",
+  "product",
+  "tenancy",
   "group",
   "cluster",
   "admin_password",
@@ -600,6 +604,34 @@
    "fieldname": "database_access_connection_limit",
    "fieldtype": "Int",
    "label": "Database Access Connection Limit"
+  },
+  {
+   "fieldname": "product",
+   "fieldtype": "Select",
+   "label": "Product",
+   "options": "ERP\nHRIS\nERP and HRIS",
+   "reqd": 1
+  },
+  {
+   "default": "Dedicated",
+   "description": "Shared \u2013 Multiple clients may share the same server. Dedicated \u2013 No other client shares the same server.",
+   "fieldname": "tenancy",
+   "fieldtype": "Select",
+   "label": "Tenancy",
+   "options": "Dedicated\nShared",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company_name_abbreviation",
+   "fieldtype": "Data",
+   "label": "Company Name Abbreviation",
+   "reqd": 1
   }
  ],
  "links": [
@@ -674,7 +706,7 @@
    "link_fieldname": "site"
   }
  ],
- "modified": "2024-11-28 15:40:02.431631",
+ "modified": "2025-02-11 16:49:20.548109",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Site",

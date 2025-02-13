@@ -132,11 +132,6 @@ class AgentJob(Document):
 			],
 			order_by="creation",
 		)
-		# agent job start and end are in utc
-		if doc.start:
-			doc.start = convert_utc_to_system_timezone(doc.start).replace(tzinfo=None)
-		if doc.end:
-			doc.end = convert_utc_to_system_timezone(doc.end).replace(tzinfo=None)
 
 		for step in doc["steps"]:
 			if step.status == "Running":
@@ -147,7 +142,7 @@ class AgentJob(Document):
 	def after_insert(self):
 		self.create_agent_job_steps()
 		self.log_creation()
-		self.enqueue_http_request()
+		# self.enqueue_http_request()
 
 	def enqueue_http_request(self):
 		frappe.enqueue_doc(
@@ -1192,10 +1187,3 @@ def update_query_result_status_timestamps(results):
 			result.status = "Pending"
 		elif result.status == "Delivery Failure":
 			result.status = "Failure"
-
-		# agent job start and end are in utc
-		if result.start:
-			result.start = convert_utc_to_system_timezone(result.start).replace(tzinfo=None)
-
-		if result.end:
-			result.end = convert_utc_to_system_timezone(result.end).replace(tzinfo=None)

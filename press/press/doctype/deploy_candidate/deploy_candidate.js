@@ -1,8 +1,6 @@
 // Copyright (c) 2020, Frappe and contributors
 // For license information, please see license.txt
 
-// TODO: Deploy site function might need to be moved to Site doctype
-
 frappe.ui.form.on('Deploy Candidate', {
 	refresh: function (frm) {
 		frm.add_web_link(
@@ -65,13 +63,6 @@ frappe.ui.form.on('Deploy Candidate', {
 				{ run_now: false },
 				'Deploy',
 			);
-			set_handler(
-				frm,
-				'Deploy Site',
-				'deploy_site',
-				{},
-				'Deploy',
-			);
 		}
 
 		// Build already running
@@ -87,13 +78,6 @@ frappe.ui.form.on('Deploy Candidate', {
 				'cleanup_build_directory',
 				{},
 				'Build',
-			);
-			set_handler(
-				frm,
-				'Deploy Site',
-				'deploy_site',
-				{},
-				'Deploy',
 			);
 		}
 	},
