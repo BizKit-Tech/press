@@ -412,21 +412,12 @@
 				<div class="mt-2 items-center">
 					<div class="col-span-2 flex w-full">
 						<TextInput
-							class="flex-1 rounded"
+							class="flex-1 rounded-r-none"
 							placeholder="BizKit Technologies Inc."
 							v-model="companyName"
 						/>
-					</div>
-				</div>
-			</div>
-			<div v-if="plan && cluster">
-				<h2 class="text-base font-medium leading-6 text-gray-900">
-					Enter Company Name Abbreviation
-				</h2>
-				<div class="mt-2 items-center">
-					<div class="col-span-2 flex w-[15rem]">
 						<TextInput
-							class="flex-1 rounded"
+							class="flex items-center rounded-r bg-gray-200 text-base"
 							placeholder="BTI"
 							v-model="companyNameAbbr"
 						/>
