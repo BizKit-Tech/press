@@ -32,7 +32,7 @@ class SiteSetup:
         self.server_username = server_doc.ssh_user
         self.server_port = server_doc.ssh_port or 22
         self.environment = server_doc.environment
-        self.server_abbr = server_doc.hostname_abbreviation
+        self.server_abbr = server_doc.hostname_abbreviation.replace("-", "_")
 
     def get_database_server_details(self):
         db_server = frappe.db.get_value("Server", self.server_name, "database_server")
@@ -40,7 +40,7 @@ class SiteSetup:
         self.rds_endpoint = db_server_doc.ip
         self.db_user = "admin"
         self.db_root_password = db_server_doc.get_password("mariadb_root_password")
-        self.db_name = f"{db_server_doc.hostname_abbreviation}_{ENV_ABBR[self.environment]}"
+        self.db_name = f"{db_server_doc.hostname_abbreviation}_{ENV_ABBR[self.environment]}".replace("-", "_")
 
     def execute(self):
         frappe.msgprint("Site setup started.")
@@ -231,7 +231,8 @@ class SiteSetup:
         commands = [
             'echo "Updating apps..."',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && source env/bin/activate && pip install python-crontab)',
-            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} update --pull --requirements --no-backup)'
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} update --pull --requirements --no-backup)',
+            f'source ~/.profile && (cd {self.frappe_bench_dir}/apps/frappe && sudo yarn install)',
         ]
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Update Apps", start_time, output, traceback)
