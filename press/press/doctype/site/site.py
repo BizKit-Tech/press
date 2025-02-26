@@ -2904,7 +2904,7 @@ class Site(Document, TagHelpers):
 	
 	@frappe.whitelist()
 	def install_site(self):
-		frappe.enqueue(self._install_site, queue="long", job_name=f"install_site_{self.name}")
+		frappe.enqueue(self._install_site, queue="long", job_name=f"install_site_{self.name}", timeout=3600)
 		self.status = "Installing"
 		self.save()
 
