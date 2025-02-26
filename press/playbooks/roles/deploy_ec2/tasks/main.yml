@@ -33,7 +33,7 @@
     region: '{{ region }}'
     image_id: '{{ image }}'
     wait: true
-    state: running
+    state: started
     tags:
       Environment: '{{ instance_environment }}'
       Project: '{{ instance_name }}'
