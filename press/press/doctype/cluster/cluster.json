@@ -94,13 +94,12 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.cloud_provider !== \"Generic\"",
    "fieldname": "region",
    "fieldtype": "Link",
    "label": "Region",
    "mandatory_depends_on": "eval:doc.cloud_provider !== \"Generic\"",
    "options": "Cloud Region",
-   "set_only_once": 1
+   "read_only": 1
   },
   {
    "fieldname": "column_break_2",
@@ -333,7 +332,7 @@
    "link_fieldname": "document_name"
   }
  ],
- "modified": "2025-01-30 19:07:10.451954",
+ "modified": "2025-02-26 18:14:58.052766",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Cluster",
