@@ -102,8 +102,7 @@
   {
    "fieldname": "stripe_customer_id",
    "fieldtype": "Data",
-   "label": "Stripe Customer ID",
-   "read_only": 1
+   "label": "Stripe Customer ID"
   },
   {
    "fieldname": "country",
@@ -497,7 +496,7 @@
    "link_fieldname": "team"
   }
  ],
- "modified": "2024-11-11 10:27:47.247515",
+ "modified": "2025-02-14 18:22:33.149286",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Team",
