@@ -105,15 +105,164 @@
 					</div>
 				</div>
 			</div>
+			<div>
+				<h2 class="text-base font-medium leading-6 text-gray-900">
+					Select Product
+				</h2>
+				<div class="grid grid-cols-2 gap-3">
+					<button
+						@click="product = 'ERP'"
+						:class="[
+							product === 'ERP'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">ERP</span>
+						</div>
+					</button>
+					<button
+						@click="product = 'HRIS'"
+						:class="[
+							product === 'HRIS'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">HRIS</span>
+						</div>
+					</button>
+					<button
+						@click="product = 'ERP and HRIS'"
+						:class="[
+							product === 'ERP and HRIS'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">ERP and HRIS</span>
+						</div>
+					</button>
+				</div>
+			</div>
+			<div>
+				<h2 class="text-base font-medium leading-6 text-gray-900">
+					Select Environment
+				</h2>
+				<div class="grid grid-cols-2 gap-3">
+					<button
+						@click="environment = 'Development'"
+						:class="[
+							environment === 'Development'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">Development</span>
+						</div>
+					</button>
+					<button
+						@click="environment = 'Production'"
+						:class="[
+							environment === 'Production'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">Production</span>
+						</div>
+					</button>
+					<button
+						@click="environment = 'Demo'"
+						:class="[
+							environment === 'Demo'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">Demo</span>
+						</div>
+					</button>
+				</div>
+			</div>
+			<div v-if="environment">
+				<h2 class="text-base font-medium leading-6 text-gray-900">
+					Select Tenancy
+				</h2>
+				<div class="grid grid-cols-2 gap-3">
+					<button
+						@click="tenancy = 'Dedicated'"
+						:disabled="environment === 'Demo'"
+						:class="[
+							tenancy === 'Dedicated'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900',
+							environment === 'Demo' && 'opacity-50 cursor-not-allowed'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">Dedicated</span>
+						</div>
+					</button>
+					<button
+						@click="tenancy = 'Shared'"
+						:class="[
+							tenancy === 'Shared'
+								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+								: 'bg-white text-gray-900 hover:bg-gray-50',
+							'flex w-full items-center rounded border p-3 text-left text-base text-gray-900'
+						]"
+					>
+						<div class="flex w-full items-center justify-between">
+							<span class="text-sm font-medium">Shared</span>
+						</div>
+					</button>
+				</div>
+				<div class="mt-1">
+					<div v-if="tenancy === 'Dedicated'" class="text-base text-gray-600">
+						No other client shares the same server.
+					</div>
+					<div v-else class="text-base text-gray-600">
+						Multiple clients may share the same server.
+					</div>
+				</div>
+			</div>
 			<div
 				class="flex flex-col"
-				v-if="selectedVersion?.group?.clusters?.length"
+				v-if="tenancy === 'Dedicated'"
 			>
 				<h2 class="text-base font-medium leading-6 text-gray-900">
-					Select Region
+					Select Project
 				</h2>
 				<div class="mt-2 w-full space-y-2">
 					<div class="grid grid-cols-2 gap-3">
+						<button
+							@click="cluster = 'New Client'"
+							:class="[
+								cluster === 'New Client'
+									? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
+									: 'bg-white text-gray-900 hover:bg-gray-50',
+								'flex w-full items-center rounded border p-3 text-left text-base text-gray-900',
+								environment === 'Demo' && 'opacity-50 cursor-not-allowed'
+							]"
+						>
+							<div class="flex w-full items-center justify-between">
+								<span class="text-sm font-medium">New Client</span>
+							</div>
+						</button>
 						<button
 							v-for="c in selectedVersion.group.clusters"
 							:key="c.name"
@@ -127,7 +276,6 @@
 						>
 							<div class="flex w-full items-center justify-between">
 								<div class="flex w-full items-center space-x-2">
-									<img :src="c.image" class="h-5 w-5" />
 									<span class="text-sm font-medium">
 										{{ c.title }}
 									</span>
@@ -138,7 +286,46 @@
 					</div>
 				</div>
 			</div>
-			<div v-if="selectedVersion && cluster">
+			<div v-if="cluster === 'New Client'">
+				<h2 class="text-base font-medium leading-6 text-gray-900">
+					Enter Project Name
+				</h2>
+				<div class="mt-2 items-center">
+					<div class="col-span-2 flex w-full">
+						<TextInput
+							class="flex-1 rounded"
+							placeholder="BizKit"
+							v-model="projectName"
+						/>
+					</div>
+				</div>
+				<div class="mt-1">
+					<div
+						v-if="$resources.clusterExists.loading"
+						class="text-base text-gray-600"
+					>
+						Checking...
+					</div>
+					<template
+						v-else-if="
+							!$resources.clusterExists.error &&
+							$resources.clusterExists.data != null
+						"
+					>
+						<div
+							v-if="$resources.clusterExists.data"
+							class="text-sm text-green-600"
+						>
+							{{ projectName }} is available.
+						</div>
+						<div v-else class="text-sm text-red-600">
+							{{ projectName }} already exists. Please choose another name or select an existing project.
+						</div>
+					</template>
+					<ErrorMessage :message="$resources.clusterExists.error" />
+				</div>
+			</div>
+			<div v-if="cluster || tenancy === 'Shared'">
 				<div class="flex items-center justify-between">
 					<h2 class="text-base font-medium leading-6 text-gray-900">
 						Select Plan
@@ -176,7 +363,7 @@
 					</div>
 				</div>
 			</div>
-			<div v-if="selectedVersion && plan && cluster">
+			<div v-if="false">
 				<h2 class="text-base font-medium leading-6 text-gray-900">
 					Enter Subdomain
 				</h2>
@@ -218,33 +405,42 @@
 					<ErrorMessage :message="$resources.subdomainExists.error" />
 				</div>
 			</div>
+			<div v-if="plan && cluster">
+				<h2 class="text-base font-medium leading-6 text-gray-900">
+					Enter Full Company Name
+				</h2>
+				<div class="mt-2 items-center">
+					<div class="col-span-2 flex w-full">
+						<TextInput
+							class="flex-1 rounded"
+							placeholder="BizKit Technologies Inc."
+							v-model="companyName"
+						/>
+					</div>
+				</div>
+			</div>
+			<div v-if="plan && cluster">
+				<h2 class="text-base font-medium leading-6 text-gray-900">
+					Enter Company Name Abbreviation
+				</h2>
+				<div class="mt-2 items-center">
+					<div class="col-span-2 flex w-[15rem]">
+						<TextInput
+							class="flex-1 rounded"
+							placeholder="BTI"
+							v-model="companyNameAbbr"
+						/>
+					</div>
+				</div>
+			</div>
 			<Summary
-				v-if="selectedVersion && cluster && plan && subdomain"
+				v-if="cluster && plan && companyName"
 				:options="siteSummaryOptions"
 			/>
-			<div
-				v-if="selectedVersion && cluster && plan"
-				class="flex flex-col space-y-4"
-			>
-				<FormControl
-					class="checkbox"
-					type="checkbox"
-					v-model="agreedToRegionConsent"
-					:label="`I agree that the laws of the region selected by me (${selectedClusterTitle}) shall stand applicable to me and Frappe.`"
-				/>
-				<FormControl
-					class="checkbox"
-					type="checkbox"
-					label="I am okay if my details are shared with local partner"
-					@change="val => (shareDetailsConsent = val.target.checked)"
-				/>
-				<ErrorMessage class="my-2" :message="$resources.newSite.error" />
-			</div>
-			<div v-if="selectedVersion && cluster && plan && subdomain">
+			<div v-if="selectedVersion && cluster && plan && companyName">
 				<Button
 					class="w-full"
 					variant="solid"
-					:disabled="!agreedToRegionConsent"
 					@click="$resources.newSite.submit()"
 					:loading="$resources.newSite.loading"
 					:loadingText="'Creating site... This may take a while...'"
@@ -294,15 +490,7 @@ export default {
 		Header
 	},
 	mounted() {
-		if (!this.$team.doc.onboarding.site_created && window.posthog?.__loaded) {
-			window.posthog.identify(this.$team.doc.user, {
-				app: 'frappe_cloud',
-				action: 'first_new_site_creation'
-			});
-			if (!window.posthog.sessionRecordingStarted()) {
-				window.posthog.startSessionRecording();
-			}
-		}
+		this.initializeComponent();
 	},
 	unmounted() {
 		if (window.posthog?.__loaded && window.posthog.sessionRecordingStarted()) {
@@ -311,6 +499,7 @@ export default {
 	},
 	data() {
 		return {
+			bench: null,
 			version: null,
 			subdomain: '',
 			cluster: null,
@@ -323,7 +512,13 @@ export default {
 			showLocalisationOption: false,
 			showAppPlanSelectorDialog: false,
 			shareDetailsConsent: false,
-			agreedToRegionConsent: false
+			agreedToRegionConsent: false,
+			product: null,
+			environment: null,
+			tenancy: null,
+			projectName: '',
+			companyName: '',
+			companyNameAbbr: '',
 		};
 	},
 	watch: {
@@ -368,6 +563,23 @@ export default {
 		},
 		closestCluster() {
 			this.cluster = this.closestCluster;
+		},
+		environment() {
+			this.tenancy = this.getDefaultTenancy(this.environment);
+		},
+		projectName: {
+			handler: debounce(function (value) {
+				this.$resources.clusterExists.submit();
+			}, 500)
+		},
+		companyName: {
+			handler: debounce(function (value) {
+				this.companyNameAbbr = value
+					.split(' ')
+					.map(word => word[0])
+					.join('')
+					.toUpperCase();
+			}, 500)
 		}
 	},
 	resources: {
@@ -382,7 +594,7 @@ export default {
 						this.version = this.options.versions[0].name;
 					}
 				},
-				auto: true
+				auto: false
 			};
 		},
 		subdomainExists() {
@@ -405,107 +617,59 @@ export default {
 				}
 			};
 		},
+		clusterExists() {
+			return {
+				url: 'press.api.site.cluster_exists',
+				makeParams() {
+					return {
+						cluster: this.projectName
+					};
+				},
+				validate() {
+					if (!this.projectName) {
+						return new DashboardError('Please enter a project name');
+					}
+				},
+				transform(data) {
+					return !Boolean(data);
+				}
+			};
+		},
 		newSite() {
 			if (!(this.options && this.selectedVersion)) return;
 
-			if (this.bench) {
-				return {
-					url: 'press.api.client.insert',
-					makeParams() {
-						let appPlans = {};
-						for (let app of this.apps) {
-							if (app.plan) {
-								appPlans[app.app] = app.plan;
-							}
+			return {
+				url: 'press.api.bizkit_site.new',
+				makeParams() {
+					return {
+						args: {
+							cluster: this.cluster,
+							project_name: this.selectedClusterTitle,
+							company_name: this.companyName,
+							company_name_abbr: this.companyNameAbbr,
+							environment: this.environment,
+							apps: ['frappe', ...this.apps.map(app => app.app)],
+							product: this.product,
+							tenancy: this.tenancy,
+							site_plan: this.plan.name,
 						}
-
-						return {
-							doc: {
-								doctype: 'Site',
-								team: this.$team.doc.name,
-								subdomain: this.subdomain,
-								apps: [
-									{ app: 'frappe' },
-									...this.apps
-										.filter(app => app.app)
-										.map(app => ({ app: app.app }))
-								],
-								app_plans: appPlans,
-								cluster: this.cluster,
-								bench: this.bench ? this.selectedVersion.group.bench : null,
-								group: this.selectedVersion.group.name,
-								domain: this.options.domain,
-								subscription_plan: this.plan.name,
-								share_details_consent: this.shareDetailsConsent
-							}
-						};
-					},
-					validate() {
-						if (!this.subdomain) {
-							throw new DashboardError('Please enter a subdomain');
-						}
-
-						if (!this.agreedToRegionConsent) {
-							throw new DashboardError(
-								'Please agree to the above consent to create site'
-							);
-						}
-					},
-					onSuccess: site => {
-						router.push({
-							name: 'Site Jobs',
-							params: { name: site.name }
-						});
-					}
-				};
-			} else {
-				return {
-					url: 'press.api.site.new',
-					makeParams() {
-						let appPlans = {};
-						for (let app of this.apps) {
-							if (app.plan) {
-								appPlans[app.app] = app.plan;
-							}
-						}
-
-						return {
-							site: {
-								name: this.subdomain,
-								apps: ['frappe', ...this.apps.map(app => app.app)],
-								localisation_country: this.showLocalisationSelector
-									? this.selectedLocalisationCountry?.value
-									: null,
-								version: this.selectedVersion.name,
-								group: this.selectedVersion.group.name,
-								cluster: this.cluster,
-								plan: this.plan.name,
-								share_details_consent: this.shareDetailsConsent,
-								selected_app_plans: appPlans
-								// files: this.selectedFiles,
-								// skip_failing_patches: this.skipFailingPatches,
-							}
-						};
-					},
-					validate() {
-						if (!this.subdomain) {
-							throw new DashboardError('Please enter a subdomain');
-						}
-
-						if (!this.agreedToRegionConsent) {
-							throw new DashboardError(
-								'Please agree to the above consent to create site'
-							);
-						}
-					},
-					onSuccess: site => {
-						router.push({
-							name: 'Site Job',
-							params: { name: site.site, id: site.job }
-						});
-					}
-				};
-			}
+					};
+				},
+				onSuccess: site => {
+					router.push({
+						name: 'Site Jobs',
+						params: { name: site.name }
+					});
+				}
+			};
+		},
+		getDefaultBench() {
+			return {
+				url: 'press.api.site.get_default_bench',
+				onSuccess(data) {
+					this.bench = data;
+				}
+			};
 		}
 	},
 	computed: {
@@ -539,6 +703,7 @@ export default {
 			}));
 		},
 		selectedClusterTitle() {
+			if (this.cluster === 'New Client') return this.projectName;
 			return this.selectedVersion?.group?.clusters?.find(
 				c => c.name === this.cluster
 			)?.title;
@@ -718,12 +883,20 @@ export default {
 					value: this.selectedVersion?.name
 				},
 				{
-					label: 'Region',
+					label: 'Product',
+					value: this.product
+				},
+				{
+					label: 'Project Name',
 					value: this.selectedClusterTitle
 				},
 				{
-					label: 'Site URL',
-					value: `${this.subdomain}.${this.options?.domain}`
+					label: 'Full Company Name',
+					value: this.companyName
+				},
+				{
+					label: 'Company Name Abbreviation',
+					value: this.companyNameAbbr
 				},
 				{
 					label: 'Site Plan',
@@ -732,12 +905,6 @@ export default {
 							? this.selectedPlan.price_inr
 							: this.selectedPlan.price_usd
 					)} per month`
-				},
-				{
-					label: 'Product Warranty',
-					value: this.selectedPlan.support_included
-						? 'Included'
-						: 'Not Included'
 				},
 				{
 					label: 'Apps',
@@ -752,6 +919,23 @@ export default {
 		}
 	},
 	methods: {
+		async initializeComponent() {
+			if (!this.$team.doc.onboarding.site_created && window.posthog?.__loaded) {
+				window.posthog.identify(this.$team.doc.user, {
+					app: 'frappe_cloud',
+					action: 'first_new_site_creation'
+				});
+				if (!window.posthog.sessionRecordingStarted()) {
+					window.posthog.startSessionRecording();
+				}
+			}
+
+			if (!this.bench) {
+				await this.$resources.getDefaultBench.submit();
+			}
+
+			this.$resources.options.submit();
+		},
 		async getClosestCluster() {
 			if (this.closestCluster) return this.closestCluster;
 			let proxyServers = this.selectedVersion?.group?.clusters
@@ -796,6 +980,13 @@ export default {
 			return this.availableVersions
 				.sort((a, b) => b.name.localeCompare(a.name))
 				.find(v => !v.disabled)?.name;
+		},
+		getDefaultTenancy(environment) {
+			if (environment === 'Demo') {
+				return 'Shared';
+			} else {
+				return 'Dedicated';
+			}
 		}
 	}
 };
