@@ -4,7 +4,7 @@
 frappe.ui.form.on('Cluster', {
 	refresh: function (frm) {
 		[
-			[__('Prepare VPC'), 'prepare_vpc', frm.doc.status === 'Active'],
+			[__('Prepare VPC'), 'prepare_vpc', frm.doc.status === 'Pending'],
 			[__('Create Servers'), 'create_servers', frm.doc.status === 'Active'],
 			[__('Add Images'), 'add_images', frm.doc.status === 'Active'],
 		].forEach(([label, method, condition]) => {
