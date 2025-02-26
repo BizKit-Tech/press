@@ -168,6 +168,8 @@ export default {
 
 			if (privateApps.length === 0) return;
 
+			this.apps = this.availableApps.filter(app => app.preinstalled === true);
+
 			return {
 				data: () => privateApps,
 				columns: [
@@ -183,12 +185,13 @@ export default {
 							const isAppAdded = this.apps
 								.map(a => a.app)
 								.includes(app.app || app.app_title);
+							const isPreinstalled = app.preinstalled;
 							return {
 								label: 'Add',
 								slots: {
-									icon: isAppAdded ? icon('check') : icon('plus')
+									icon: isAppAdded || isPreinstalled ? icon('check') : icon('plus')
 								},
-								variant: isAppAdded ? 'outline' : 'subtle',
+								variant: isAppAdded || isPreinstalled ? 'outline' : 'subtle',
 								onClick: event => {
 									this.toggleApp(app);
 									event.stopPropagation();
@@ -203,7 +206,8 @@ export default {
 	methods: {
 		toggleApp(app) {
 			if (app.preinstalled) {
-				toast.error(app.title + ' is pre-installed and cannot be removed');
+				const app_title = app.title || app.app_title;
+				toast.error(app_title + ' is pre-installed and cannot be removed');
 			} else if (this.apps.map(a => a.app).includes(app.app)) {
 				this.apps = this.apps.filter(a => a.app !== app.app);
 			} else {
