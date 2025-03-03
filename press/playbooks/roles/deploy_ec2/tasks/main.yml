@@ -20,20 +20,26 @@
       Environment: '{{ instance_environment }}'
       Project: '{{ instance_name }}'
       FrappePress: Yes
+  register: ec2_sec_group
 
 - name: Provision an EC2 instance
   amazon.aws.ec2_instance:
     name: '{{ instance_name }} {{ instance_environment }}'
-    key_name: '{{ key_name }}'
     vpc_subnet_id: '{{ subnet_1_id }}'
     instance_type: '{{ instance_type }}'
-    security_group: '{{ sec_group }}'
+    security_group: '{{ ec2_sec_group.group_id }}'
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
     region: '{{ region }}'
-    image_id: '{{ image }}'
     wait: true
     state: started
+    launch_template:
+      name: BizKitFrappePress
+    network_interfaces:
+      - assign_public_ip: false
+        subnet_id: '{{ subnet_1_id }}'
+        groups:
+          - '{{ ec2_sec_group.group_id }}'
     tags:
       Environment: '{{ instance_environment }}'
       Project: '{{ instance_name }}'
