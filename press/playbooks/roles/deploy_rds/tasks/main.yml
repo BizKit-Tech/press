@@ -13,6 +13,7 @@
           - 3306
         cidr_ip: 0.0.0.0/0
     tags:
+      Name: '{{ instance_name }} Database'
       Project: '{{ instance_name }}'
       FrappePress: Yes
   register: security_group
