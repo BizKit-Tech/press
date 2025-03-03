@@ -878,6 +878,10 @@ export default {
 					value: this.product
 				},
 				{
+					label: 'Environment',
+					value: this.environment
+				},
+				{
 					label: 'Project Name',
 					value: this.selectedClusterTitle
 				},
