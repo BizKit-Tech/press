@@ -1996,6 +1996,61 @@ class Server(BaseServer):
 		mount_points = set(mount.mount_point for mount in self.mounts)
 		bench_mount_points = set(["/home/frappe/benches"])
 		return bench_mount_points.issubset(mount_points)
+	
+	def _change_instance_state(self, state):
+		INSTANCE_STATE = {
+			"running": "Running",
+			"stopped": "Stopped",
+			"rebooted": "Running",
+		}
+
+		if state == "rebooted":
+			self.instance_state = "Rebooting"
+			self.save()
+			self.reload()
+
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		try:
+			ansible = Ansible(
+				playbook="change_instance_state.yml",
+				server=self,
+				user=self._ssh_user(),
+				port=self._ssh_port(),
+				variables={
+					"instance_id": self.private_ip,
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+					"state": state,
+				},
+			)
+			play = ansible.run()
+			self.reload()
+			if play.status == "Success":
+				self.instance_state = INSTANCE_STATE[state]
+			else:
+				self.instance_state = "Pending"
+		except Exception:
+			self.instance_state = "Pending"
+			log_error("Change Instance State Exception", server=self.as_dict())
+		self.save()
+
+	@frappe.whitelist()
+	def stop_instance(self):
+		state = "stopped"
+		self._change_instance_state(state)
+
+	@frappe.whitelist()
+	def start_instance(self):
+		state = "running"
+		self._change_instance_state(state)
+
+	@frappe.whitelist()
+	def reboot_instance(self):
+		state = "rebooted"
+		self._change_instance_state(state)
 
 
 def scale_workers(now=False):
