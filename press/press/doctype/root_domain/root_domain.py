@@ -28,6 +28,7 @@ class RootDomain(Document):
 		aws_secret_access_key: DF.Password | None
 		default_cluster: DF.Link
 		dns_provider: DF.Literal["Generic", "AWS Route 53"]
+		environment: DF.Literal["Development", "Production", "Demo", "Database"]
 	# end: auto-generated types
 
 	def after_insert(self):
