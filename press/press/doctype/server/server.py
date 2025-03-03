@@ -1313,6 +1313,7 @@ class Server(BaseServer):
 		ignore_incidents_since: DF.Datetime | None
 		instance_id: DF.Data | None
 		instance_ram: DF.Int
+		instance_state: DF.Literal["Pending", "Running", "Stopped", "Rebooting"]
 		instance_type: DF.Data | None
 		ip: DF.Data | None
 		is_connected_to_database: DF.Check
