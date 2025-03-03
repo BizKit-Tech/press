@@ -40,6 +40,7 @@ class AppSource(Document):
 		repository: DF.Data | None
 		repository_owner: DF.Data | None
 		repository_url: DF.Data
+		ssh_url: DF.Data
 		team: DF.Link
 		uninstalled: DF.Check
 		versions: DF.Table[AppSourceVersion]

@@ -11,6 +11,7 @@
   "frappe",
   "enabled",
   "repository_url",
+  "ssh_url",
   "data_3",
   "repository",
   "repository_owner",
@@ -161,6 +162,12 @@
    "fieldtype": "Check",
    "label": "Uninstalled",
    "read_only": 1
+  },
+  {
+   "fieldname": "ssh_url",
+   "fieldtype": "Data",
+   "label": "SSH URL",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -170,7 +177,7 @@
    "link_fieldname": "reference_name"
   }
  ],
- "modified": "2024-04-05 10:12:54.374115",
+ "modified": "2025-02-27 13:05:18.591608",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "App Source",
