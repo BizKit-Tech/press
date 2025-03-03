@@ -14,6 +14,7 @@ ENV_ABBR = {
     "Production": "prod",
     "Demo": "demo",
 }
+DEFAULT_APPS = ["frappe", "erpnext", "bizkit_core"]
 
 
 class SiteSetup:
@@ -56,6 +57,7 @@ class SiteSetup:
             self.enable_automatic_bench_start()
             self.setup_production()
             self.create_site()
+            self.install_additional_apps()
             self.set_developer_mode()
             self.restart_bench()
             self.remove_fail2ban() 
@@ -126,6 +128,12 @@ class SiteSetup:
                     "parent": "Site Setup",
                     "parentfield": "steps",
                     "parenttype": "Agent Job Type",
+                    "step_name": "Install Additional Apps"
+                },
+                {
+                    "parent": "Site Setup",
+                    "parentfield": "steps",
+                    "parenttype": "Agent Job Type",
                     "step_name": "Set Developer Mode"
                 },
                 {
@@ -187,10 +195,10 @@ class SiteSetup:
         if skipped:
             doc.status = "Skipped"
         else:
-            doc.output = output
+            doc.output = output["message"]
             doc.traceback = traceback
             doc.status = "Success"
-            if traceback:
+            if output["exit_status"] != 0:
                 self.fail = True
                 doc.status = "Failure"
         doc.save()
@@ -212,13 +220,17 @@ class SiteSetup:
             self.client.close()
 
     def execute_commands(self, commands):
-        output = ""
+        output = {"message": "", "exit_status": 0}
         traceback = ""
 
         for command in commands:
             _stdin, stdout, stderr = self.client.exec_command(command)
-            output += stdout.read().decode()
+            output["message"] += stdout.read().decode()
             traceback += stderr.read().decode()
+            exit_status = stdout.channel.recv_exit_status()
+            if exit_status != 0:
+                output["exit_status"] = exit_status
+                break
 
         return output, traceback
 
@@ -243,7 +255,7 @@ class SiteSetup:
             'echo "Configuring database..."',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} set-config -g db_host {self.rds_endpoint})',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} set-config -g rds_db 1)',
-            f'source ~/.profile && mysql -h {self.rds_endpoint} -u {self.db_user} -P 3306 -p{self.db_root_password} -e "CREATE DATABASE {self.db_name};"',
+            f'source ~/.profile && mysql -h {self.rds_endpoint} -u {self.db_user} -P 3306 -p{self.db_root_password} -e "CREATE DATABASE IF NOT EXISTS {self.db_name};"',
         ]
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Configure Database", start_time, output, traceback)
@@ -288,9 +300,10 @@ class SiteSetup:
             'echo "Setting up production..."',
             'source ~/.profile && sudo apt-get install -y python3-pip',
             'source ~/.profile && sudo pip3 install -e ~/.bench',
-            f'source ~/.profile && sudo {self.frappe_bench_dir} setup production ubuntu --yes',
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && sudo {self.bench_path} setup production ubuntu --yes)',
             'source ~/.profile && chmod 701 /home/ubuntu',
-            f'source ~/.profile && sudo {self.frappe_bench_dir} setup production ubuntu --yes # For restarting services',
+            'echo "Restarting services..."',
+            f'source ~/.profile && (cd {self.frappe_bench_dir} && sudo {self.bench_path} setup production ubuntu --yes) # For restarting services',
         ]
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Setup Production", start_time, output, traceback)
@@ -308,6 +321,39 @@ class SiteSetup:
         ]
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Create Site", start_time, output, traceback)
+
+    def install_additional_apps(self):
+        start_time = now()
+        
+        press_settings = frappe.get_single("Press Settings")
+        default_apps = press_settings.get_default_apps() or DEFAULT_APPS
+        site_apps = frappe.get_all("Site App", filters={"parent": self.site.name}, pluck="app")
+        apps = list(set(site_apps) - set(default_apps))
+        if not apps:
+            self.update_agent_job_step("Install Additional Apps", start_time, skipped=True)
+            return
+        
+        commands = ['echo "Installing additional apps..."']
+
+        main_command = 'source ~/.profile && (cd {frappe_bench_dir} && {command})'
+        for app in apps:
+            repo_url, branch = frappe.db.get_value("App Source", {"app": app, "enabled": 1}, ["ssh_url", "branch"])
+            prereq_script = frappe.db.get_value("App", app, "installation_script_bash")
+            if prereq_script:
+                prereq_script_command = f"source ~/.profile && bash <<EOF\n{prereq_script}\nEOF"
+                commands.append(prereq_script_command)
+
+            get_app_command = f"{self.bench_path} get-app {repo_url} --branch {branch}"
+            install_command = f"{self.bench_path} --site {self.server_abbr} install-app {app} --run-patches"
+
+            formatted_get_app_command = main_command.format(frappe_bench_dir=self.frappe_bench_dir, command=get_app_command)
+            formatted_install_command = main_command.format(frappe_bench_dir=self.frappe_bench_dir, command=install_command)
+
+            commands.append(formatted_get_app_command)
+            commands.append(formatted_install_command)
+        
+        output, traceback = self.execute_commands(commands)
+        self.update_agent_job_step("Install Additional Apps", start_time, output, traceback)
 
     def set_developer_mode(self):
         start_time = now()
