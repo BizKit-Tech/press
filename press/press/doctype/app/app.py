@@ -28,6 +28,7 @@ class App(Document):
 		enabled: DF.Check
 		frappe: DF.Check
 		installation: DF.Data | None
+		installation_script_bash: DF.Code | None
 		public: DF.Check
 		repo: DF.Data | None
 		repo_owner: DF.Data | None

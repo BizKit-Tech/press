@@ -18,19 +18,15 @@ class SitePlan(Plan):
 	if TYPE_CHECKING:
 		from frappe.core.doctype.has_role.has_role import HasRole
 		from frappe.types import DF
-
-		from press.press.doctype.site_plan_allowed_app.site_plan_allowed_app import (
-			SitePlanAllowedApp,
-		)
-		from press.press.doctype.site_plan_release_group.site_plan_release_group import (
-			SitePlanReleaseGroup,
-		)
+		from press.press.doctype.site_plan_allowed_app.site_plan_allowed_app import SitePlanAllowedApp
+		from press.press.doctype.site_plan_release_group.site_plan_release_group import SitePlanReleaseGroup
 
 		allow_downgrading_from_other_plan: DF.Check
 		allowed_apps: DF.Table[SitePlanAllowedApp]
 		cluster: DF.Link | None
 		cpu_time_per_day: DF.Float
 		database_access: DF.Check
+		db_instance_type: DF.Data | None
 		dedicated_server_plan: DF.Check
 		disk: DF.Int
 		document_type: DF.Link

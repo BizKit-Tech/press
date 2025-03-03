@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "default_cluster",
+  "environment",
   "column_break_4",
   "dns_provider",
   "aws_access_key_id",
@@ -45,6 +46,12 @@
    "label": "Default Cluster",
    "options": "Cluster",
    "reqd": 1
+  },
+  {
+   "fieldname": "environment",
+   "fieldtype": "Select",
+   "label": "Environment",
+   "options": "Development\nProduction\nDemo\nDatabase"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -80,7 +87,7 @@
    "link_fieldname": "domain"
   }
  ],
- "modified": "2025-02-10 18:57:11.459860",
+ "modified": "2025-02-27 17:34:38.797842",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Root Domain",

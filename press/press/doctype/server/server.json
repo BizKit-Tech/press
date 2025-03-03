@@ -318,11 +318,11 @@
    "label": "Staging"
   },
   {
-   "depends_on": "eval:[\"AWS EC2\", \"OCI\"].includes(doc.provider)",
+   "depends_on": "eval:[\"OCI\"].includes(doc.provider)",
    "fieldname": "virtual_machine",
    "fieldtype": "Link",
    "label": "Virtual Machine",
-   "mandatory_depends_on": "eval:[\"AWS EC2\", \"OCI\"].includes(doc.provider)",
+   "mandatory_depends_on": "eval:[\"OCI\"].includes(doc.provider)",
    "options": "Virtual Machine"
   },
   {
@@ -620,7 +620,7 @@
   }
  ],
  "links": [],
- "modified": "2025-02-10 13:39:56.420333",
+ "modified": "2025-02-27 18:42:16.498399",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",

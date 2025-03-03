@@ -651,11 +651,14 @@ def get_available_versions(for_bench: str = None):  # noqa
 
 
 def get_restricted_release_group_names():
-	return frappe.db.get_all(
-		"Site Plan Release Group",
-		pluck="release_group",
-		filters={"parenttype": "Site Plan", "parentfield": "release_groups"},
-	)
+	# return frappe.db.get_all(
+	# 	"Site Plan Release Group",
+	# 	pluck="release_group",
+	# 	filters={"parenttype": "Site Plan", "parentfield": "release_groups"},
+	# )
+
+	# For BizKit site creation
+	return []
 
 
 def set_bench_and_clusters(version, for_bench):
@@ -668,9 +671,15 @@ def set_bench_and_clusters(version, for_bench):
 	)
 	if bench:
 		version.group.bench = bench
+		# version.group.bench_app_sources = frappe.db.get_all(
+		# 	"Bench App", {"parent": bench, "app": ("!=", "frappe")}, pluck="source"
+		# )
+
+		# For BizKit site creation, get all app sources
 		version.group.bench_app_sources = frappe.db.get_all(
-			"Bench App", {"parent": bench, "app": ("!=", "frappe")}, pluck="source"
+			"App Source", {"app": ("!=", "frappe")}, pluck="name"
 		)
+
 		cluster_names = unique(
 			frappe.db.get_all(
 				"Bench",
@@ -678,11 +687,19 @@ def set_bench_and_clusters(version, for_bench):
 				pluck="cluster",
 			)
 		)
+		# clusters = frappe.db.get_all(
+		# 	"Cluster",
+		# 	filters={"name": ("in", cluster_names)},
+		# 	fields=["name", "title", "image", "beta"],
+		# )
+
+		# For BizKit site creation, get all active and public clusters
 		clusters = frappe.db.get_all(
 			"Cluster",
-			filters={"name": ("in", cluster_names)},
+			filters={"status": "Active", "public": 1},
 			fields=["name", "title", "image", "beta"],
 		)
+
 		if not for_bench:
 			proxy_servers = frappe.db.get_all(
 				"Proxy Server",
@@ -861,8 +878,12 @@ def get_site_plans():
 
 	for plan in plans:
 		if plan.name in plan_details_dict:
-			plan.clusters = plan_details_dict[plan.name]["clusters"]
-			plan.allowed_apps = plan_details_dict[plan.name]["allowed_apps"]
+			# plan.clusters = plan_details_dict[plan.name]["clusters"]
+			# plan.allowed_apps = plan_details_dict[plan.name]["allowed_apps"]
+
+			# For BizKit site creation
+			plan.clusters = []
+			plan.allowed_apps = []
 			plan.bench_versions = plan_details_dict[plan.name]["bench_versions"]
 			plan.restricted_plan = True
 		else:
@@ -1584,6 +1605,16 @@ def exists(subdomain, domain):
 	from press.press.doctype.site.site import Site
 
 	return Site.exists(subdomain, domain)
+
+
+@frappe.whitelist()
+def cluster_exists(cluster):
+	return bool(frappe.db.exists("Cluster", {"status": "Active", "title": cluster}))
+
+
+@frappe.whitelist()
+def get_default_bench():
+	return frappe.db.get_value("Release Group", {"default": 1}, "name")
 
 
 @frappe.whitelist()

@@ -21,7 +21,9 @@
   "installation",
   "team",
   "enable_auto_deploy",
-  "skip_review"
+  "skip_review",
+  "section_break_ftsm",
+  "installation_script_bash"
  ],
  "fields": [
   {
@@ -123,13 +125,23 @@
    "in_standard_filter": 1,
    "label": "Title",
    "reqd": 1
+  },
+  {
+   "fieldname": "installation_script_bash",
+   "fieldtype": "Code",
+   "label": "Installation Script (Bash)"
+  },
+  {
+   "fieldname": "section_break_ftsm",
+   "fieldtype": "Section Break"
   }
  ],
  "links": [],
- "modified": "2021-02-15 10:11:04.324983",
+ "modified": "2025-02-28 16:24:15.962045",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "App",
+ "naming_rule": "Set by user",
  "owner": "Administrator",
  "permissions": [
   {
@@ -157,6 +169,7 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "title",
  "track_changes": 1
 }
