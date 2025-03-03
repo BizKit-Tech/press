@@ -28,6 +28,8 @@ def new(args):
     app_instance_type = site_plan_details["app_instance_type"]
     app_volume_size = site_plan_details["app_volume_size"]
 
+    domain = frappe.db.get_value("Root Domain", {"environment": environment}, "name")
+
     if is_new_client(cluster):
         print("Creating new client")
         print("Creating cluster")
@@ -39,7 +41,7 @@ def new(args):
         db_server = frappe.db.get_value("Database Server", {"cluster": cluster, "is_server_setup": 1}, "name")
 
     print("Creating app server")
-    app_server = create_app_server(project_name, cluster, environment, app_instance_type, app_volume_size, db_server)
+    app_server = create_app_server(project_name, cluster, environment, app_instance_type, app_volume_size, db_server, domain)
 
     if release_group := get_existing_release_group(apps):
         print("Adding server to existing release group")
@@ -53,7 +55,7 @@ def new(args):
         bench = add_server_to_release_group(release_group, app_server)
     
     print("Creating site")
-    return create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, apps)
+    return create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan)
 
 def get_site_plan_details(site_plan):
     site_plan_doc = frappe.get_doc("Site Plan", site_plan)
@@ -81,10 +83,13 @@ def create_cluster(project_name):
     return cluster_doc.name
 
 def create_database_server(project_name, cluster_name, db_instance_type, db_storage_size):
+    domain = frappe.db.get_value("Root Domain", {"environment": "Database"}, "name")
+
     database_doc = frappe.get_doc({
         "doctype": "Database Server",
         "hostname": slugify(project_name),
         "hostname_abbreviation": slugify(project_name),
+        "domain": domain,
         "title": project_name,
         "provider": "AWS RDS",
         "cluster": cluster_name,
@@ -104,13 +109,19 @@ def create_database_server(project_name, cluster_name, db_instance_type, db_stor
     frappe.db.commit()
     database_doc.reload()
     database_doc._setup_server()
+
+    database_doc.reload()
+    if database_doc.status == "Broken":
+        frappe.throw("Database Server setup failed")
+
     return database_doc.name
 
-def create_app_server(project_name, cluster_name, environment, app_instance_type, app_volume_size, database_server_name):
+def create_app_server(project_name, cluster_name, environment, app_instance_type, app_volume_size, database_server_name, domain):
     app_server_doc = frappe.get_doc({
         "doctype": "Server",
         "hostname": slugify(project_name),
         "hostname_abbreviation": slugify(project_name),
+        "domain": domain,
         "title": project_name,
         "provider": "AWS EC2",
         "cluster": cluster_name,
@@ -126,6 +137,11 @@ def create_app_server(project_name, cluster_name, environment, app_instance_type
     app_server_doc.reload()
     app_server_doc._setup_server()
     app_server_doc.connect_to_rds()
+
+    app_server_doc.reload()
+    if app_server_doc.status == "Broken":
+        frappe.throw("App Server setup failed")
+
     return app_server_doc.name
 
 def create_release_group(project_name, apps, team):
@@ -151,6 +167,7 @@ def add_server_to_release_group(release_group, app_server_name):
     release_group_doc = frappe.get_doc("Release Group", release_group)
     deploy = release_group_doc.add_server(app_server_name, True) # includes creation of Deploy and Bench
     bench = frappe.db.get_value("Deploy Bench", filters={"parent": deploy}, fieldname=["bench"])
+    frappe.db.set_value("Bench", bench, "status", "Active")
     frappe.db.commit()
     return bench
 
@@ -165,10 +182,11 @@ def create_bench(deploy_candidate):
     deploy_candidate_doc = frappe.get_doc("Deploy Candidate", deploy_candidate)
     deploy = deploy_candidate_doc.deploy() # creates Deploy and Bench
     bench = frappe.db.get_value("Deploy Bench", filters={"parent": deploy}, fieldname=["bench"])
+    frappe.db.set_value("Bench", bench, "status", "Active")
     frappe.db.commit()
     return bench
 
-def create_site(company_name, company_name_abbr, bench_name, product, tenancy, release_group, cluster_name, app_server_name, project_name, team, apps):
+def create_site(company_name, company_name_abbr, bench_name, product, tenancy, release_group, cluster_name, app_server_name, project_name, team, domain, site_plan):
     bench_doc = frappe.get_doc("Bench", bench_name)
     bench_apps = [{"app": app.app} for app in bench_doc.apps]
     
@@ -183,8 +201,10 @@ def create_site(company_name, company_name_abbr, bench_name, product, tenancy, r
         "cluster": cluster_name,
         "server": app_server_name,
         "subdomain": slugify(project_name),
+        "domain": domain,
         "team": team,
         "apps": bench_apps,
+        "plan": site_plan,
     })
     site_doc.insert()
     frappe.db.commit()
@@ -203,5 +223,5 @@ def get_existing_release_group(apps):
     for release_group in release_groups:
         release_group_apps = frappe.get_all("Release Group App", filters={"parent": release_group.name}, fields=["app"])
         release_group_apps = [app.app for app in release_group_apps]
-        if all(app in apps for app in release_group_apps if app != "frappe"):
+        if not list(set(apps) - set(release_group_apps)):
             return release_group.name
