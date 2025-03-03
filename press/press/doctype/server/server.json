@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "status",
+  "instance_state",
   "hostname",
   "hostname_abbreviation",
   "domain",
@@ -617,10 +618,19 @@
    "fieldtype": "Check",
    "label": "Is Connected to Database",
    "read_only": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "instance_state",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Instance State",
+   "options": "Pending\nRunning\nStopped\nRebooting",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2025-02-27 18:42:16.498399",
+ "modified": "2025-03-03 20:26:09.380392",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",

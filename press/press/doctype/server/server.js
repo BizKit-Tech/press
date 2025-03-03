@@ -51,6 +51,24 @@ frappe.ui.form.on('Server', {
 		}
 
 		[
+			[
+				__('Stop Instance'),
+				'stop_instance',
+				true,
+				frm.doc.status !== 'Archived' && frm.doc.instance_state == 'Running',
+			],
+			[
+				__('Start Instance'),
+				'start_instance',
+				true,
+				frm.doc.status !== 'Archived' && frm.doc.instance_state == 'Stopped',
+			],
+			[
+				__('Reboot Instance'),
+				'reboot_instance',
+				true,
+				frm.doc.status !== 'Archived' && frm.doc.instance_state === 'Running',
+			],
 			[__('Update Agent'), 'update_agent', true, frm.doc.is_server_setup],
 			[
 				__('Update Agent Ansible'),
