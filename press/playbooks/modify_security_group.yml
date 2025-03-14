@@ -1,6 +1,5 @@
 ---
 - hosts: localhost
-  become: yes
   gather_facts: no
   vars:
     rds_instance_id: '{{ rds_instance_id }}'
