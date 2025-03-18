@@ -1,6 +1,5 @@
 ---
 - hosts: localhost
-  become: yes
   gather_facts: no
   vars:
     instance_name: '{{ instance_name }}'
