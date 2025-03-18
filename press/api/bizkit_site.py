@@ -11,6 +11,9 @@ def slugify(s):
 
 @frappe.whitelist()
 def new(args):
+    frappe.enqueue(_new, args=args, queue="long", timeout=3600)
+
+def _new(args):
     cluster = args.get("cluster")
     project_name = args.get("project_name")
     company_name = args.get("company_name")
@@ -30,32 +33,53 @@ def new(args):
 
     domain = frappe.db.get_value("Root Domain", {"environment": environment}, "name")
 
-    if is_new_client(cluster):
-        print("Creating new client")
-        print("Creating cluster")
-        cluster = create_cluster(project_name)
-        print("Creating database server")
-        db_server = create_database_server(project_name, cluster, db_instance_type, db_storage_size)
-    else:
-        cluster = project_name
-        db_server = frappe.db.get_value("Database Server", {"cluster": cluster, "is_server_setup": 1}, "name")
+    try:
+        if is_new_client(cluster):
+            print("Creating new client")
+            print("Creating cluster")
+            cluster = create_cluster(project_name)
+            print("Creating database server")
+            db_server = create_database_server(project_name, cluster, db_instance_type, db_storage_size)
+        else:
+            cluster = project_name
+            db_server = frappe.db.get_value("Database Server", {"cluster": cluster, "is_server_setup": 1}, "name")
 
-    print("Creating app server")
-    app_server = create_app_server(project_name, cluster, environment, app_instance_type, app_volume_size, db_server, domain)
+        print("Creating app server")
+        app_server = create_app_server(project_name, cluster, environment, app_instance_type, app_volume_size, db_server, domain)
 
-    if release_group := get_existing_release_group(apps):
-        print("Adding server to existing release group")
-        bench = add_server_to_release_group(release_group, app_server)
-    else:
-        print("Creating new release group")
-        release_group = create_release_group(project_name, apps, team)
-        print("Creating deploy candidate")
-        deploy_candidate = create_deploy_candidate(release_group)
-        print("Adding server to release group and creating bench")
-        bench = add_server_to_release_group(release_group, app_server)
-    
-    print("Creating site")
-    return create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan)
+        if release_group := get_existing_release_group(apps):
+            print("Adding server to existing release group")
+            bench = add_server_to_release_group(release_group, app_server)
+        else:
+            print("Creating new release group")
+            release_group = create_release_group(project_name, apps, team)
+            print("Creating deploy candidate")
+            deploy_candidate = create_deploy_candidate(release_group)
+            print("Adding server to release group and creating bench")
+            bench = add_server_to_release_group(release_group, app_server)
+        
+        print("Creating site")
+        site = create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan)
+        
+        create_notification({
+            "team": team,
+            "doctype": "Site",
+            "docname": site.name,
+            "title": "Site Configuration in Progress",
+            "message": "Your servers are ready and the site creation is now underway. You can track the progress in the logs here: " + frappe.utils.get_url(f"/dashboard/sites/{site}/insights/jobs"),
+            "traceback": None,
+        })
+
+    except Exception as e:
+        create_notification({
+            "team": team,
+            "doctype": "Cluster",
+            "docname": cluster,
+            "title": "Site Creation Failed",
+            "message": "An error occurred while creating the site. Please see the traceback for more details.",
+            "traceback": str(e),
+        })
+        raise e
 
 def get_site_plan_details(site_plan):
     site_plan_doc = frappe.get_doc("Site Plan", site_plan)
@@ -225,3 +249,30 @@ def get_existing_release_group(apps):
         release_group_apps = [app.app for app in release_group_apps]
         if not list(set(apps) - set(release_group_apps)):
             return release_group.name
+        
+def create_notification(details):
+    team = details.get("team")
+    doctype = details.get("doctype")
+    docname = details.get("docname")
+    title = details.get("title")
+    message = details.get("message")
+    traceback = details.get("traceback")
+    notif_class = "Success"
+    if traceback:
+        notif_class = "Error"
+
+    notification_doc = frappe.get_doc({
+        "doctype": "Press Notification",
+        "team": team,
+        "type": "Site Update",
+        "document_type": doctype,
+        "document_name": docname,
+        "class": notif_class,
+        "title": title,
+        "message": message,
+        "traceback": traceback,
+    })
+    notification_doc.insert()
+    frappe.db.commit()
+
+    frappe.publish_realtime("press_notification", doctype="Press Notification", message={"team": team})

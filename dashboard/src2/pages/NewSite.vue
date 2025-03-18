@@ -5,6 +5,21 @@
 		</Header>
 	</div>
 
+	<!-- Dialog -->
+	<Dialog 
+		v-model="showModal" 
+		@close="closeModal"
+		:options="{ title: 'Site Creation Started' }"
+		:disableOutsideClickToClose="true"
+	>
+		<template #body-content>
+			<p>The setup process has started and may take a few minutes. You'll be notified once the servers are ready and the site configuration is underway.</p>
+		</template>
+		<template #actions>
+			<Button @click="closeModal">Close and Reload</Button>
+		</template>
+	</Dialog>
+
 	<div
 		v-if="!$team.doc?.is_desk_user && !$session.hasSiteCreationAccess"
 		class="mx-auto mt-60 w-fit rounded border border-dashed px-12 py-8 text-center text-gray-600"
@@ -452,7 +467,8 @@ import {
 	Tooltip,
 	debounce,
 	Breadcrumbs,
-	getCachedDocumentResource
+	getCachedDocumentResource,
+	Dialog
 } from 'frappe-ui';
 import SitePlansCards from '../components/SitePlansCards.vue';
 import { validateSubdomain } from '../utils/site';
@@ -510,6 +526,7 @@ export default {
 			projectName: '',
 			companyName: '',
 			companyNameAbbr: '',
+			showModal: false,
 		};
 	},
 	watch: {
@@ -646,11 +663,8 @@ export default {
 						}
 					};
 				},
-				onSuccess: site => {
-					router.push({
-						name: 'Site Jobs',
-						params: { name: site.name }
-					});
+				onSuccess() {
+					this.showModal = true;
 				}
 			};
 		},
@@ -982,7 +996,11 @@ export default {
 			} else {
 				return 'Dedicated';
 			}
-		}
+		},
+		closeModal() {
+			this.showModal = false;
+			router.push({ name: 'Site List' });
+		},
 	}
 };
 </script>
