@@ -190,7 +190,7 @@ def create_release_group(project_name, apps, team):
 def add_server_to_release_group(release_group, app_server_name):
     release_group_doc = frappe.get_doc("Release Group", release_group)
     deploy = release_group_doc.add_server(app_server_name, True) # includes creation of Deploy and Bench
-    bench = frappe.db.get_value("Deploy Bench", filters={"parent": deploy}, fieldname=["bench"])
+    bench = frappe.db.get_value("Deploy Bench", filters={"parent": deploy.name}, fieldname=["bench"])
     frappe.db.set_value("Bench", bench, "status", "Active")
     frappe.db.commit()
     return bench
