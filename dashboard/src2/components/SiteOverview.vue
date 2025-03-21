@@ -374,14 +374,14 @@ export default {
 			const currency = this.$team.doc.currency;
 			return {
 				price:
-					currency === 'INR'
+					currency === 'PHP'
 						? this.$site.doc.current_plan.price_inr
 						: this.$site.doc.current_plan.price_usd,
 				price_per_day:
-					currency === 'INR'
+					currency === 'PHP'
 						? this.$site.doc.current_plan.price_per_day_inr
 						: this.$site.doc.current_plan.price_per_day_usd,
-				currency: currency === 'INR' ? '₹' : '$',
+				currency: currency === 'PHP' ? '₱' : '$',
 				...this.$site.doc.current_plan
 			};
 		},

@@ -65,7 +65,7 @@ const { currentBillingAmount, upcomingInvoice, unpaidInvoices } =
 const showAddPrepaidCreditsDialog = ref(false);
 const showInvoiceDialog = ref(false);
 
-const currency = computed(() => (team.doc.currency == 'INR' ? '₹' : '$'));
+const currency = computed(() => (team.doc.currency == 'PHP' ? '₱' : '$'));
 
 const unpaidAmount = createResource({
 	url: 'press.api.billing.total_unpaid_amount',
