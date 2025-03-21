@@ -450,6 +450,7 @@
 					@click="$resources.newSite.submit()"
 					:loading="$resources.newSite.loading"
 					:loadingText="'Creating site... This may take a while...'"
+					:disabled="hasErrors"
 				>
 					Create site
 				</Button>
@@ -635,8 +636,20 @@ export default {
 				},
 				validate() {
 					if (!this.projectName) {
-						return new DashboardError('Please enter a project name');
+						this.$resources.clusterExists.error = 'Please enter a project name';
+						return false;
 					}
+					const projectNameRegex = /^[a-zA-Z0-9-]+$/;
+					if (!projectNameRegex.test(this.projectName)) {
+						this.$resources.clusterExists.error = 'Project name contains invalid characters. Use letters, numbers, and hyphens';
+						return false;
+					}
+					if (this.projectName.length < 5 || this.projectName.length > 32) {
+						this.$resources.clusterExists.error = 'Project name must be between 5 and 32 characters';
+						return false;
+					}
+					this.$resources.clusterExists.error = null;
+					return true;
 				},
 				transform(data) {
 					return !Boolean(data);
@@ -678,6 +691,16 @@ export default {
 		}
 	},
 	computed: {
+		hasErrors() {
+            return (
+                this.$resources.clusterExists.error ||
+                this.$resources.subdomainExists.error ||
+                !this.selectedVersion ||
+                !this.cluster ||
+                !this.plan ||
+                !this.companyName
+            );
+        },
 		options() {
 			return this.$resources.options.data;
 		},
