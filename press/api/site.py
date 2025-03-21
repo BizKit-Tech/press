@@ -1609,7 +1609,7 @@ def exists(subdomain, domain):
 
 @frappe.whitelist()
 def cluster_exists(cluster):
-	return bool(frappe.db.exists("Cluster", {"status": "Active", "title": cluster}))
+	return bool(frappe.db.exists("Cluster", {"title": cluster}))
 
 
 @frappe.whitelist()
