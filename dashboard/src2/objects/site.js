@@ -1002,6 +1002,74 @@ export default {
 				}
 			},
 			{
+				label: 'Config Import',
+				icon: icon('upload'),
+				route: 'config-import',
+				type: 'list',
+				condition: site => site.doc?.status !== 'Archived',
+				list: {
+					doctype: 'Configuration Import',
+					filters: site => {
+						return { site: site.doc?.name };
+					},
+					fields: ['name'],
+					pageLength: 999,
+					orderBy: 'creation desc',
+					columns: [
+						{
+							label: 'Configuration Type',
+							fieldname: 'configuration_type',
+							width: 1
+						},
+						{
+							label: 'Status',
+							fieldname: 'status',
+							width: 1,
+							type: 'Badge'
+						},
+						{
+							label: 'Sheet Type',
+							fieldname: 'sheet_type',
+							width: 1
+						}
+					],
+					primaryAction({ listResource: configs, documentResource: site }) {
+						return {
+							label: 'New Import',
+							slots: {
+								prefix: icon('plus')
+							},
+							onClick() {
+								const NewConfigImportDialog = defineAsyncComponent(() =>
+									import('../components/NewConfigImportDialog.vue')
+								);
+								renderDialog(
+									h(NewConfigImportDialog, {
+										site: site.doc?.name,
+										onConfigAdded() {
+											configs.reload();
+										}
+									})
+								);
+							}
+						};
+					},
+					rowActions({ row }) {
+						const $team = getTeam();
+				
+						return [
+							{
+								label: 'View in Desk',
+								condition: () => $team.doc?.is_desk_user,
+								onClick() {
+									window.open(`/app/configuration-import/${row.name}`, '_blank');
+								}
+							}
+						]
+					}
+				}
+			},
+			{
 				label: 'Actions',
 				icon: icon('sliders'),
 				route: 'actions',

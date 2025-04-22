@@ -4,6 +4,7 @@
 import frappe
 from frappe.model.document import Document
 
+from press.api.client import dashboard_whitelist
 from .sheet_importer import get_sheet_importer
 
 
@@ -26,6 +27,8 @@ class ConfigurationImport(Document):
 		status: DF.Literal["Pending", "In Progress", "Success", "Partial Success", "Error"]
 		template_warnings: DF.Code | None
 	# end: auto-generated types
+
+	dashboard_fields = ["configuration_type", "sheet_type", "status"]
 	
 	@frappe.whitelist()
 	def test_google_sheet_permission(self):

@@ -76,6 +76,7 @@ ALLOWED_DOCTYPES = [
 	"SQL Playground Log",
 	"Site Database User",
 	"Press Settings",
+	"Configuration Import",
 ]
 
 ALLOWED_DOCTYPES_FOR_SUPPORT = [

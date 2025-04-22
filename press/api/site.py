@@ -37,6 +37,7 @@ from press.utils import (
 	log_error,
 	unique,
 )
+from press.press.doctype.configuration_import.sheet_importer import get_sheet_importer
 
 if TYPE_CHECKING:
 	from frappe.types import DF
@@ -2353,3 +2354,27 @@ def get_site_config_standard_keys():
 		["name", "key", "title", "description", "type"],
 		order_by="title asc",
 	)
+
+@frappe.whitelist()
+def test_google_sheet_permission(sheet_type, google_sheet_url):
+	"""Test if the Google Sheet is accessible."""
+	if sheet_type != "Google Sheets" and not google_sheet_url:
+		return
+
+	try:
+		sheet_importer = get_sheet_importer("google", google_sheet_url)
+		status = "Accessible"
+	except:
+		status = "Inaccessible"
+
+	print(status)
+
+	return status
+
+@frappe.whitelist()
+def new_config_import(args):
+	doc = frappe.get_doc({
+		"doctype": "Configuration Import",
+		**args
+	})
+	doc.insert()
