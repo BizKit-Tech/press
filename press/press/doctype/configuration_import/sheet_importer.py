@@ -7,7 +7,6 @@ from gspread.exceptions import WorksheetNotFound
 from json.decoder import JSONDecodeError
 
 
-JSON_KEYFILE = os.path.abspath(frappe.get_site_path("google_keyfile.json"))
 SCOPES = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive",
@@ -18,6 +17,8 @@ SETTINGS_LIST = [
     "Selling Settings",
     "Stock Settings",
     "System Settings",
+    "HR Settings",
+    "Payroll Settings",
     "Item Price Settings",
 ]
 WORKSHEETS = [
@@ -48,6 +49,8 @@ class GoogleSheetImporter(SheetImporter):
         self.set_workbook(workbook_url)
 
     def initialize_client(self):
+        JSON_KEYFILE = os.path.abspath(frappe.utils.get_site_path("google_keyfile.json"))
+
         try:
             creds = ServiceAccountCredentials.from_json_keyfile_name(
                 JSON_KEYFILE, SCOPES
