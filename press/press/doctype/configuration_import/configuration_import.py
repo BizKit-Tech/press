@@ -159,7 +159,7 @@ def strip_ansi_codes(text):
 
 def parse_log_entry(log_entry):
 	clean_entry = strip_ansi_codes(log_entry)
-	pattern = r"\[Row ([^\]]+)\]\[(\w+)\] (.+)"
+	pattern = r"\[(Row|DocType|File) ([^\]]+)\]\[(\w+)\] (.+)"
 	match = re.match(pattern, clean_entry)
 	if match:
 		row_number = match.group(1)
