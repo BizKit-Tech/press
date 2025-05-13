@@ -138,7 +138,7 @@ export default {
 				},
 				onSuccess() {
 					this.$emit('success');
-					// this.showDialog = false;
+					this.showDialog = false;
 					window.location.reload();
 				},
 				onError(error) {
