@@ -20,7 +20,7 @@ class ConfigurationImport(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		configuration_type: DF.Literal["", "Roles and Permissions", "Field Properties", "Accounts Settings", "Buying Settings", "Selling Settings", "Stock Settings", "HR Settings", "Payroll Settings", "System Settings"]
+		configuration_type: DF.Literal["", "Roles and Permissions", "Field Properties", "Accounts Settings", "Buying Settings", "Selling Settings", "Stock Settings", "Item Price Settings", "HR Settings", "Payroll Settings", "System Settings"]
 		excel_file: DF.Attach | None
 		google_sheet_access_status: DF.Literal["Not Tested", "Accessible", "Inaccessible"]
 		google_sheet_url: DF.Data | None
@@ -110,6 +110,7 @@ class ConfigurationImport(Document):
 			"System Settings": "import-settings",
 			"HR Settings": "import-settings",
 			"Payroll Settings": "import-settings",
+			"Item Price Settings": "import-settings"
 		}
 
 		frappe_bench_dir = "/home/ubuntu/frappe-bench"

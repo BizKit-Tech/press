@@ -16,6 +16,7 @@
 						'Buying Settings',
 						'Selling Settings',
 						'Stock Settings',
+						'Item Price Settings',
 						'HR Settings',
 						'Payroll Settings',
 						'System Settings'

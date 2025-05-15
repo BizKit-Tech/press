@@ -46,7 +46,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Configuration Type",
-   "options": "\nRoles and Permissions\nField Properties\nAccounts Settings\nBuying Settings\nSelling Settings\nStock Settings\nHR Settings\nPayroll Settings\nSystem Settings",
+   "options": "\nRoles and Permissions\nField Properties\nAccounts Settings\nBuying Settings\nSelling Settings\nStock Settings\nItem Price Settings\nHR Settings\nPayroll Settings\nSystem Settings",
    "reqd": 1,
    "set_only_once": 1
   },
@@ -144,7 +144,7 @@
  "hide_toolbar": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-08 12:59:20.704944",
+ "modified": "2025-05-15 18:35:42.223809",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Configuration Import",
