@@ -111,7 +111,6 @@ class ConfigurationImport(Document):
 			"HR Settings": "import-settings",
 			"Payroll Settings": "import-settings",
 		}
-		app = "bizkit_core" if self.configuration_type == "Field Properties" else ""
 
 		frappe_bench_dir = "/home/ubuntu/frappe-bench"
 		bench_path = "/home/ubuntu/.local/bin/bench"
@@ -120,8 +119,11 @@ class ConfigurationImport(Document):
 		sheet_location = self.google_sheet_url if self.sheet_type == "Google Sheets" else self.excel_file
 
 		commands = [
-			f'source ~/.profile && (cd {frappe_bench_dir} && {bench_path} {import_functions_map[self.configuration_type]} --sheet-type {sheet_type} --sheet-location {sheet_location} {app})',
+			f'source ~/.profile && (cd {frappe_bench_dir} && {bench_path} {import_functions_map[self.configuration_type]} --sheet-type {sheet_type} --sheet-location {sheet_location})',
 		]
+
+		if self.configuration_type == "Field Properties":
+			commands.append(f'source ~/.profile && (cd {frappe_bench_dir} && {bench_path} clear-cache)')
 
 		output, traceback = self.execute_commands(commands)
 
@@ -157,33 +159,24 @@ ANSI_ESCAPE = re.compile(r'\x1B\[[0-9;]*[A-Za-z]')
 def strip_ansi_codes(text):
     return ANSI_ESCAPE.sub('', text)
 
+
 def parse_log_entry(log_entry):
 	clean_entry = strip_ansi_codes(log_entry)
 	pattern = r"\[(Row|DocType|File) ([^\]]+)\]\[(\w+)\] (.+)"
 	match = re.match(pattern, clean_entry)
 	if match:
-		row_number = match.group(1)
-		status = match.group(2)
-		message = match.group(3)
+		entity_type = match.group(1)
+		row_number = match.group(2)
+		status = match.group(3)
+		message = match.group(4)
 		return {
+			"entity_type": entity_type,
 			"row": row_number,
 			"status": status,
 			"message": message
 		}
 	else:
 		raise ValueError(f"Invalid log entry format: {clean_entry}")
-
-
-def parse_log_entries(log_entries):
-	parsed_entries = []
-	for entry in log_entries:
-		try:
-			parsed_entry = parse_log_entry(entry)
-			parsed_entries.append(parsed_entry)
-		except ValueError as e:
-			print(e)
-			continue
-	return parsed_entries
 
 
 def parse_and_group_entries(log_entries):
@@ -194,6 +187,7 @@ def parse_and_group_entries(log_entries):
 			key = parsed["message"]
 			if key not in grouped:
 				grouped[key] = {
+					"entity_type": parsed["entity_type"],
 					"row": parsed["row"],
 					"status": parsed["status"],
 					"message": parsed["message"]
