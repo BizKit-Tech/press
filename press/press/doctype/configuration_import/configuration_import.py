@@ -32,7 +32,7 @@ class ConfigurationImport(Document):
 		template_warnings: DF.Code | None
 	# end: auto-generated types
 
-	dashboard_fields = ["site", "configuration_type", "sheet_type", "status"]
+	dashboard_fields = ["site", "configuration_type", "sheet_type", "status", "creation"]
 
 	def after_insert(self):
 		if self.status == "Pending":

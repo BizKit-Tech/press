@@ -1038,6 +1038,14 @@ export default {
 							width: 1
 						},
 						{
+							label: 'Date Created',
+							fieldname: 'creation',
+							width: 1,
+							format(value) {
+								return date(value, 'lll');
+							}
+						},
+						{
 							label: '',
 							fieldname: '',
 							align: 'right',
