@@ -1,0 +1,195 @@
+{
+ "actions": [],
+ "autoname": "format:{site} {configuration_type} Import on {creation}",
+ "creation": "2025-04-03 17:22:03.165241",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "status",
+  "site",
+  "configuration_type",
+  "sheet_type",
+  "google_sheet_url",
+  "test_permissions",
+  "google_sheet_access_status",
+  "excel_file",
+  "import_file_errors_and_warnings_section",
+  "template_warnings",
+  "import_warnings",
+  "preview_section",
+  "import_preview",
+  "import_log_section",
+  "show_failed_logs",
+  "import_log_preview",
+  "import_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Pending\nIn Progress\nSuccess\nPartial Success\nError"
+  },
+  {
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Site",
+   "options": "Site",
+   "reqd": 1
+  },
+  {
+   "fieldname": "configuration_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Configuration Type",
+   "options": "\nRoles and Permissions\nField Properties\nAccounts Settings\nBuying Settings\nSelling Settings\nStock Settings\nItem Price Settings\nHR Settings\nPayroll Settings\nSystem Settings",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:!doc.__islocal;",
+   "fieldname": "sheet_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Sheet Type",
+   "mandatory_depends_on": "eval:!doc.__islocal;",
+   "options": "\nGoogle Sheets\nExcel"
+  },
+  {
+   "depends_on": "eval:doc.sheet_type==\"Google Sheets\";",
+   "fieldname": "google_sheet_url",
+   "fieldtype": "Data",
+   "label": "Google Sheet URL",
+   "mandatory_depends_on": "eval:doc.sheet_type==\"Google Sheets\";"
+  },
+  {
+   "depends_on": "eval:doc.sheet_type==\"Google Sheets\";",
+   "fieldname": "test_permissions",
+   "fieldtype": "Button",
+   "label": "Test Permissions"
+  },
+  {
+   "default": "Not Tested",
+   "depends_on": "eval:doc.sheet_type==\"Google Sheets\";",
+   "fieldname": "google_sheet_access_status",
+   "fieldtype": "Select",
+   "label": "Google Sheet Access Status",
+   "options": "Not Tested\nAccessible\nInaccessible",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.sheet_type==\"Excel\";",
+   "fieldname": "excel_file",
+   "fieldtype": "Attach",
+   "label": "Excel File"
+  },
+  {
+   "fieldname": "import_file_errors_and_warnings_section",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Import File Errors and Warnings"
+  },
+  {
+   "fieldname": "template_warnings",
+   "fieldtype": "Code",
+   "hidden": 1,
+   "label": "Template Warnings",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "import_warnings",
+   "fieldtype": "HTML",
+   "label": "Import Warnings"
+  },
+  {
+   "fieldname": "preview_section",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Preview"
+  },
+  {
+   "fieldname": "import_preview",
+   "fieldtype": "HTML",
+   "label": "Import Preview"
+  },
+  {
+   "fieldname": "import_log_section",
+   "fieldtype": "Section Break",
+   "label": "Import Log"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_failed_logs",
+   "fieldtype": "Check",
+   "label": "Show Only Failed Logs"
+  },
+  {
+   "fieldname": "import_log_preview",
+   "fieldtype": "HTML",
+   "label": "Import Log Preview"
+  },
+  {
+   "fieldname": "import_log",
+   "fieldtype": "Code",
+   "hidden": 1,
+   "label": "Import Log",
+   "options": "JSON"
+  }
+ ],
+ "grid_page_length": 50,
+ "hide_toolbar": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-05-15 18:35:42.223809",
+ "modified_by": "Administrator",
+ "module": "Press",
+ "name": "Configuration Import",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Press Member",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Press Admin",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

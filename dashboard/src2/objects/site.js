@@ -1002,6 +1002,107 @@ export default {
 				}
 			},
 			{
+				label: 'Config Import',
+				icon: icon('upload'),
+				route: 'config-import',
+				type: 'list',
+				condition: site => site.doc?.status !== 'Archived',
+				list: {
+					doctype: 'Configuration Import',
+					filters: site => {
+						return { site: site.doc?.name };
+					},
+					fields: ['name'],
+					pageLength: 20,
+					orderBy: 'creation desc',
+					columns: [
+						{
+							label: 'Configuration Type',
+							fieldname: 'configuration_type',
+							width: 1
+						},
+						{
+							label: 'Status',
+							fieldname: 'status',
+							width: 1,
+							type: 'Badge'
+							// To do: Add color coding
+							// Error - red
+							// Success - green
+							// Pending - yellow
+							// Partial Success - orange
+						},
+						{
+							label: 'Sheet Type',
+							fieldname: 'sheet_type',
+							width: 1
+						},
+						{
+							label: 'Date Created',
+							fieldname: 'creation',
+							width: 1,
+							format(value) {
+								return date(value, 'lll');
+							}
+						},
+						{
+							label: '',
+							fieldname: '',
+							align: 'right',
+							type: 'Button',
+							width: 1,
+							Button({ row }) {
+								const $team = getTeam();
+
+								return {
+									label: 'View Import Log',
+									slots: {
+										prefix: icon('eye')
+									},
+									condition: () => $team.doc?.is_desk_user || row.status !== 'Pending',
+									onClick() {
+										window.open(`/app/configuration-import/${row.name}`, '_blank');
+									}
+								}
+							}
+						}
+					],
+					primaryAction({ listResource: configs, documentResource: site }) {
+						return {
+							label: 'New Import',
+							slots: {
+								prefix: icon('plus')
+							},
+							onClick() {
+								const NewConfigImportDialog = defineAsyncComponent(() =>
+									import('../components/NewConfigImportDialog.vue')
+								);
+								renderDialog(
+									h(NewConfigImportDialog, {
+										site: site.doc?.name,
+										onConfigAdded() {
+											configs.reload();
+										}
+									})
+								);
+							}
+						};
+					},
+					secondaryAction({ listResource: configs }) {
+						return {
+							label: 'View Import Templates',
+							slots: {
+								prefix: icon('external-link')
+							},
+							onClick() {
+								// To do: Do not hardcode this link
+								window.open(`https://drive.google.com/drive/u/0/folders/1-ICEigqvreWYB_16Jz6QDjiLznMKRc26/`, '_blank');
+							}
+						};
+					}
+				}
+			},
+			{
 				label: 'Actions',
 				icon: icon('sliders'),
 				route: 'actions',
