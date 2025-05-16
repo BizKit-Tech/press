@@ -1013,7 +1013,7 @@ export default {
 						return { site: site.doc?.name };
 					},
 					fields: ['name'],
-					pageLength: 999,
+					pageLength: 20,
 					orderBy: 'creation desc',
 					columns: [
 						{
@@ -1026,11 +1026,37 @@ export default {
 							fieldname: 'status',
 							width: 1,
 							type: 'Badge'
+							// To do: Add color coding
+							// Error - red
+							// Success - green
+							// Pending - yellow
+							// Partial Success - orange
 						},
 						{
 							label: 'Sheet Type',
 							fieldname: 'sheet_type',
 							width: 1
+						},
+						{
+							label: '',
+							fieldname: '',
+							align: 'right',
+							type: 'Button',
+							width: 1,
+							Button({ row }) {
+								const $team = getTeam();
+
+								return {
+									label: 'View Import Log',
+									slots: {
+										prefix: icon('eye')
+									},
+									condition: () => $team.doc?.is_desk_user || row.status !== 'Pending',
+									onClick() {
+										window.open(`/app/configuration-import/${row.name}`, '_blank');
+									}
+								}
+							}
 						}
 					],
 					primaryAction({ listResource: configs, documentResource: site }) {
@@ -1054,18 +1080,17 @@ export default {
 							}
 						};
 					},
-					rowActions({ row }) {
-						const $team = getTeam();
-				
-						return [
-							{
-								label: 'View in Desk',
-								condition: () => $team.doc?.is_desk_user,
-								onClick() {
-									window.open(`/app/configuration-import/${row.name}`, '_blank');
-								}
+					secondaryAction({ listResource: configs }) {
+						return {
+							label: 'View Import Templates',
+							slots: {
+								prefix: icon('external-link')
+							},
+							onClick() {
+								// To do: Do not hardcode this link
+								window.open(`https://drive.google.com/drive/u/0/folders/1-ICEigqvreWYB_16Jz6QDjiLznMKRc26/`, '_blank');
 							}
-						]
+						};
 					}
 				}
 			},

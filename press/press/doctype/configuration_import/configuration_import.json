@@ -20,13 +20,15 @@
   "import_preview",
   "import_log_section",
   "show_failed_logs",
-  "import_log_preview"
+  "import_log_preview",
+  "import_log"
  ],
  "fields": [
   {
    "fieldname": "status",
    "fieldtype": "Select",
    "hidden": 1,
+   "in_list_view": 1,
    "label": "Status",
    "no_copy": 1,
    "options": "Pending\nIn Progress\nSuccess\nPartial Success\nError"
@@ -44,7 +46,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Configuration Type",
-   "options": "\nRoles and Permissions\nField Properties\nAccounts Settings\nBuying Settings\nSelling Settings\nStock Settings\nSystem Settings",
+   "options": "\nRoles and Permissions\nField Properties\nAccounts Settings\nBuying Settings\nSelling Settings\nStock Settings\nItem Price Settings\nHR Settings\nPayroll Settings\nSystem Settings",
    "reqd": 1,
    "set_only_once": 1
   },
@@ -88,6 +90,7 @@
   {
    "fieldname": "import_file_errors_and_warnings_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Import File Errors and Warnings"
   },
   {
@@ -105,6 +108,7 @@
   {
    "fieldname": "preview_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Preview"
   },
   {
@@ -127,13 +131,20 @@
    "fieldname": "import_log_preview",
    "fieldtype": "HTML",
    "label": "Import Log Preview"
+  },
+  {
+   "fieldname": "import_log",
+   "fieldtype": "Code",
+   "hidden": 1,
+   "label": "Import Log",
+   "options": "JSON"
   }
  ],
  "grid_page_length": 50,
  "hide_toolbar": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-04 17:44:40.500482",
+ "modified": "2025-05-15 18:35:42.223809",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Configuration Import",

@@ -5,6 +5,7 @@
 	>
 		<template v-slot:body-content>
 			<div class="space-y-4">
+				<!-- To do: Find a way to dynamically get the options -->
 				<FormControl
 					type="select"
 					label="Configuration Type"
@@ -15,6 +16,9 @@
 						'Buying Settings',
 						'Selling Settings',
 						'Stock Settings',
+						'Item Price Settings',
+						'HR Settings',
+						'Payroll Settings',
 						'System Settings'
 					]"
 					v-model="configType"
@@ -28,6 +32,12 @@
 					]"
 					v-model="sheetType"
 				/>
+				<p
+					v-if="sheetType === 'Google Sheets'"
+					class="text-xs text-gray-600"
+				>
+					Google Sheets must be shared with <code>{{ googleApiEmail }}</code> with <b>Viewer</b> access.
+				</p>
 				<FormControl
 					v-if="sheetType === 'Google Sheets'"
 					type="text"
@@ -74,7 +84,7 @@
 				:loading="$resources.newConfig.loading"
 				:loadingText="'Importing...'"
 				@click="$resources.newConfig.submit()"
-				:disabled="!configType || !sheetType || (sheetType === 'Google Sheets' && !googleSheetURL && googleSheetStatus !== 'Accessible') || (sheetType === 'Excel' && !excelFile)"
+				:disabled="!configType || !sheetType || (sheetType === 'Google Sheets' && !googleSheetURL || googleSheetStatus !== 'Accessible') || (sheetType === 'Excel' && !excelFile)"
 			>
 				Start Import
 			</Button>
@@ -98,6 +108,7 @@ export default {
 		ErrorMessage
 	},
 	data() {
+		// To do: Do not hardcode the googleApiEmail
 		return {
 			docResource: null,
 			showDialog: true,
@@ -107,6 +118,7 @@ export default {
 			googleSheetStatus: 'Not Tested',
 			googleSheetStatusMessage: null,
 			excelFile: null,
+			googleApiEmail: 'configuration-template@client-configuration-upload.iam.gserviceaccount.com',
 		};
 	},
 	resources: {
@@ -128,6 +140,7 @@ export default {
 				onSuccess() {
 					this.$emit('success');
 					this.showDialog = false;
+					window.location.reload();
 				},
 				onError(error) {
 					console.error(error);
