@@ -3,7 +3,10 @@
 
 from __future__ import annotations
 
+import os
+import re
 import json
+import paramiko
 from typing import TYPE_CHECKING
 
 import frappe
@@ -11,6 +14,7 @@ from frappe.desk.doctype.tag.tag import add_tag
 from frappe.model.document import Document
 
 from press.agent import Agent
+from press.utils import log_error
 
 if TYPE_CHECKING:
 	from datetime import datetime
@@ -87,10 +91,11 @@ class SiteBackup(Document):
 			frappe.throw("Too many pending backups")
 
 	def after_insert(self):
-		site = frappe.get_doc("Site", self.site)
-		agent = Agent(site.server)
-		job = agent.backup_site(site, self.with_files, self.offsite)
-		frappe.db.set_value("Site Backup", self.name, "job", job.name)
+		self.backup_job()
+		# site = frappe.get_doc("Site", self.site)
+		# agent = Agent(site.server)
+		# job = agent.backup_site(site, self.with_files, self.offsite)
+		# frappe.db.set_value("Site Backup", self.name, "job", job.name)
 
 	def after_delete(self):
 		if self.job:
@@ -112,6 +117,84 @@ class SiteBackup(Document):
 	@classmethod
 	def file_backup_exists(cls, site: str, day: datetime.date) -> bool:
 		return cls.backup_exists(site, day, {"with_files": True})
+	
+	# BizKit Backup Job
+	def setup_remote_connection(self):
+		site = frappe.get_doc("Site", self.site)
+		server = frappe.get_doc("Server", site.server)
+		server_ip = server.ip
+		server_port = server.ssh_port or 22
+		server_username = server.ssh_user or "ubuntu"
+
+		try:
+			pkey = paramiko.RSAKey.from_private_key_file(get_ssh_key())
+			self.client = paramiko.SSHClient()
+			self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			self.client.connect(server_ip, port=server_port, username=server_username, pkey=pkey)
+		except Exception as e:
+			self.fail = True
+			self.client = 0
+			print("Site Backup Error: Failed to connect to server", data=e)
+
+	def close_remote_connection(self):
+		if self.client:
+			self.client.close()
+
+	def execute_commands(self, commands):
+		output = {"message": "", "exit_status": 0}
+		traceback = ""
+
+		for command in commands:
+			_stdin, stdout, stderr = self.client.exec_command(command)
+			output["message"] += stdout.read().decode()
+			traceback += stderr.read().decode()
+			exit_status = stdout.channel.recv_exit_status()
+			if exit_status != 0:
+				output["exit_status"] = exit_status
+				break
+
+		return output, traceback
+
+	def backup_job(self):
+		"""Queue the backup process."""
+		frappe.enqueue_doc(
+			self.doctype, self.name, "_backup_job", queue="long", timeout=7200
+		)
+
+	def _backup_job(self):
+		self.setup_remote_connection()
+
+		frappe_bench_dir = "/home/ubuntu/frappe-bench"
+		bench_path = "/home/ubuntu/.local/bin/bench"
+
+		with_files = "--with-files" if self.with_files else ""
+
+		commands = [
+			f'source ~/.profile && (cd {frappe_bench_dir} && {bench_path} backup {with_files})',
+		]
+
+		output, traceback = self.execute_commands(commands)
+
+		self.close_remote_connection()
+
+		self.status = "Success"
+		self.files_availability = "Available"
+		backup_details = parse_backup_details(output["message"])
+		self.database_size = backup_details["database"]["size"]
+		self.database_file = backup_details["database"]["file"]
+		self.private_size = backup_details.get("private", {}).get("size", 0)
+		self.private_file = backup_details.get("private", {}).get("file", "")
+		self.public_size = backup_details.get("public", {}).get("size", 0)
+		self.public_file = backup_details.get("public", {}).get("file", "")
+		self.config_file_size = backup_details.get("config", {}).get("size", 0)
+		self.config_file = backup_details.get("config", {}).get("file", "")
+		
+		if output["exit_status"] != 0:
+			self.status = "Failure"
+
+		self.save()
+
+		frappe.logger().error(traceback)
 
 
 def track_offsite_backups(site: str, backup_data: dict, offsite_backup_data: dict) -> tuple:
@@ -218,3 +301,26 @@ def get_backup_bucket(cluster, region=False):
 
 def on_doctype_update():
 	frappe.db.add_index("Site Backup", ["files_availability", "job"])
+
+
+def get_ssh_key():
+	ssh_key = frappe.db.get_single_value('Press Settings', 'default_ssh_key')
+	file_path = os.path.join(frappe.utils.get_site_path(), ssh_key.lstrip("/"))
+
+	return file_path
+
+
+def parse_backup_details(output):
+	pattern = r'^(Config|Database|Public|Private)\s*:\s+(\S+)\s+(\d+(?:\.\d+)?(?:[KMG]?i?B))$'
+
+	parsed = {}
+	for line in output.strip().splitlines():
+		match = re.match(pattern, line.strip())
+		if match:
+			file_type, file_path, file_size = match.groups()
+			parsed[file_type.lower()] = {
+				'file': file_path,
+				'size': file_size
+			}
+	
+	return parsed

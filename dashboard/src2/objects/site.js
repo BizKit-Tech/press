@@ -589,25 +589,16 @@ export default {
 							label: 'Database',
 							fieldname: 'database_size',
 							width: 0.5,
-							format(value) {
-								return value ? bytes(value) : '';
-							}
 						},
 						{
 							label: 'Public Files',
 							fieldname: 'public_size',
 							width: 0.5,
-							format(value) {
-								return value ? bytes(value) : '';
-							}
 						},
 						{
 							label: 'Private Files',
 							fieldname: 'private_size',
 							width: 0.5,
-							format(value) {
-								return value ? bytes(value) : '';
-							}
 						},
 						{
 							label: 'Backup with files',
