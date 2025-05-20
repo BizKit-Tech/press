@@ -16,6 +16,9 @@ from frappe.model.document import Document
 from press.agent import Agent
 from press.utils import log_error
 
+import boto3
+import io
+
 if TYPE_CHECKING:
 	from datetime import datetime
 
@@ -175,8 +178,6 @@ class SiteBackup(Document):
 
 		output, traceback = self.execute_commands(commands)
 
-		self.close_remote_connection()
-
 		self.status = "Success"
 		self.files_availability = "Available"
 		backup_details = parse_backup_details(output["message"])
@@ -188,6 +189,10 @@ class SiteBackup(Document):
 		self.public_file = backup_details.get("public", {}).get("file", "")
 		self.config_file_size = backup_details.get("config", {}).get("size", 0)
 		self.config_file = backup_details.get("config", {}).get("file", "")
+
+		self.upload_offsite_backup(backup_details)
+
+		self.close_remote_connection()
 		
 		if output["exit_status"] != 0:
 			self.status = "Failure"
@@ -196,6 +201,42 @@ class SiteBackup(Document):
 
 		frappe.logger().error(traceback)
 
+	def upload_offsite_backup(self, backup_files):
+		backup_settings = frappe.get_single("Press Settings")
+		access_key = backup_settings.offsite_backups_access_key_id
+		secret_key = backup_settings.get_password("offsite_backups_secret_access_key")
+		bucket = backup_settings.aws_s3_bucket
+		backup_count = backup_settings.offsite_backups_count
+		file_types = ["database", "site_config_backup", "files", "private-files"]
+
+		offsite_files = {}
+
+		s3 = boto3.client(
+			"s3",
+			aws_access_key_id=access_key,
+			aws_secret_access_key=secret_key,
+		)
+
+		for backup_file in backup_files.values():			
+			file_name = backup_file["file"].split(os.sep)[-1]
+			fodler_name = self.site
+			offsite_path = os.path.join(fodler_name, file_name)
+			offsite_files[file_name] = offsite_path
+
+			try:
+				sftp = self.client.open_sftp()
+				file_path = os.path.join("./frappe-bench/sites", *backup_file["file"].split(os.sep)[1:])
+				remote_file = sftp.file(file_path, "rb")
+				file_data = remote_file.read()
+				remote_file.close()
+				sftp.close()
+				s3.upload_fileobj(io.BytesIO(file_data), bucket, offsite_path)
+
+			except Exception as e:
+				frappe.logger().error(f"Failed to upload {file_name} to S3 bucket {bucket}: {str(e)}")
+				raise e
+			
+		maintain_s3_file_limit(s3, bucket, fodler_name, file_types, backup_count)
 
 def track_offsite_backups(site: str, backup_data: dict, offsite_backup_data: dict) -> tuple:
 	remote_files = {"database": None, "site_config": None, "public": None, "private": None}
@@ -324,3 +365,25 @@ def parse_backup_details(output):
 			}
 	
 	return parsed
+
+
+def maintain_s3_file_limit(s3_client, bucket, prefix, file_types, max_files):
+	response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+	files = response.get('Contents', [])
+
+	for file_type in file_types:
+		matching_files = []
+		for obj in files:
+			name = obj['Key'].split('/')[-1]
+			match = re.match(r'^\d{8}_\d{6}-[^-]+-(.+?)\.', name)
+			if match and match.group(1) == file_type:
+				matching_files.append(obj)
+
+		if len(matching_files) > max_files:
+			# Sort by LastModified (oldest first)
+			matching_files.sort(key=lambda x: x['LastModified'])
+			to_delete = matching_files[:len(matching_files) - max_files]
+
+			for obj in to_delete:
+				frappe.logger().info(f"Deleting old {file_type} file: {obj['Key']}")
+				s3_client.delete_object(Bucket=bucket, Key=obj['Key'])
