@@ -40,7 +40,7 @@
 				v-if="backup"
 				class="mb-4"
 				type="info"
-				:title="`Creating site from backup: <strong>${backup}</strong>`"
+				:title="`Creating site from <strong>${backup_site}</strong> backup created on <strong>${backup_date}</strong>`"
 			/>
 			<NewSiteAppSelector
 				:availableApps="selectedVersionAppOptions"
@@ -697,6 +697,21 @@ export default {
 				onSuccess(data) {
 					this.bench = data;
 				}
+			};
+		},
+		getBackupDetails() {
+			if (!this.backup) return;
+
+			return {
+				url: 'press.api.site.get_backup_details',
+				makeParams() {
+					return { backup: this.backup };
+				},
+				onSuccess(data) {
+					this.backup_site = data.site;
+					this.backup_date = data.creation;
+				},
+				auto: true
 			};
 		}
 	},
