@@ -156,6 +156,7 @@ class Site(Document, TagHelpers):
 		remote_database_file: DF.Link | None
 		remote_private_file: DF.Link | None
 		remote_public_file: DF.Link | None
+		restored_from_backup: DF.Link | None
 		saas_communication_secret: DF.Data | None
 		server: DF.Link
 		setup_wizard_complete: DF.Check

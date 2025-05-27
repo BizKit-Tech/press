@@ -14,6 +14,7 @@
   "status_before_update",
   "server",
   "archive_failed",
+  "restored_from_backup",
   "column_break_3",
   "bench",
   "product",
@@ -632,6 +633,13 @@
    "fieldtype": "Data",
    "label": "Company Name Abbreviation",
    "reqd": 1
+  },
+  {
+   "fieldname": "restored_from_backup",
+   "fieldtype": "Link",
+   "label": "Restored From Backup",
+   "options": "Site Backup",
+   "read_only": 1
   }
  ],
  "links": [
@@ -706,7 +714,7 @@
    "link_fieldname": "site"
   }
  ],
- "modified": "2025-02-11 16:49:20.548109",
+ "modified": "2025-05-22 17:50:38.558835",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Site",
