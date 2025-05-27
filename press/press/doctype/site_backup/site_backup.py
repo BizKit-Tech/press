@@ -27,6 +27,8 @@ class SiteBackup(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
+	from typing import TYPE_CHECKING
+
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
@@ -60,6 +62,7 @@ class SiteBackup(Document):
 	# end: auto-generated types
 
 	dashboard_fields = (
+		"name",
 		"job",
 		"status",
 		"database_url",
@@ -181,14 +184,16 @@ class SiteBackup(Document):
 		self.status = "Success"
 		self.files_availability = "Available"
 		backup_details = parse_backup_details(output["message"])
-		self.database_size = backup_details["database"]["size"]
-		self.database_file = backup_details["database"]["file"]
-		self.private_size = backup_details.get("private", {}).get("size", 0)
-		self.private_file = backup_details.get("private", {}).get("file", "")
-		self.public_size = backup_details.get("public", {}).get("size", 0)
-		self.public_file = backup_details.get("public", {}).get("file", "")
-		self.config_file_size = backup_details.get("config", {}).get("size", 0)
-		self.config_file = backup_details.get("config", {}).get("file", "")
+		self.update({
+			"database_size": backup_details["database"]["size"],
+			"database_file": backup_details["database"]["file"],
+			"private_size": backup_details.get("private", {}).get("size", 0),
+			"private_file": backup_details.get("private", {}).get("file", ""),
+			"public_size": backup_details.get("public", {}).get("size", 0),
+			"public_file": backup_details.get("public", {}).get("file", ""),
+			"config_file_size": backup_details.get("config", {}).get("size", 0),
+			"config_file": backup_details.get("config", {}).get("file", "")
+		})
 
 		self.upload_offsite_backup(backup_details)
 
@@ -202,6 +207,13 @@ class SiteBackup(Document):
 		frappe.logger().error(traceback)
 
 	def upload_offsite_backup(self, backup_files):
+		file_type_field = {
+			"database": "database_url",
+			"config": "config_file_url",
+			"public": "public_url",
+			"private": "private_url",
+		}
+
 		backup_settings = frappe.get_single("Press Settings")
 		access_key = backup_settings.offsite_backups_access_key_id
 		secret_key = backup_settings.get_password("offsite_backups_secret_access_key")
@@ -217,11 +229,12 @@ class SiteBackup(Document):
 			aws_secret_access_key=secret_key,
 		)
 
-		for backup_file in backup_files.values():			
+		for key, backup_file in backup_files.items():			
 			file_name = backup_file["file"].split(os.sep)[-1]
 			fodler_name = self.site
 			offsite_path = os.path.join(fodler_name, file_name)
 			offsite_files[file_name] = offsite_path
+			region = "ap-southeast-1"
 
 			try:
 				sftp = self.client.open_sftp()
@@ -232,9 +245,14 @@ class SiteBackup(Document):
 				sftp.close()
 				s3.upload_fileobj(io.BytesIO(file_data), bucket, offsite_path)
 
+				self.update({
+					file_type_field[key]: f"https://{bucket}.s3.{region}.amazonaws.com/{fodler_name}/{file_name}"
+				})
 			except Exception as e:
 				frappe.logger().error(f"Failed to upload {file_name} to S3 bucket {bucket}: {str(e)}")
 				raise e
+		
+		self.offsite = 1
 			
 		maintain_s3_file_limit(s3, bucket, fodler_name, file_types, backup_count)
 

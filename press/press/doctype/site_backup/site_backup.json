@@ -92,7 +92,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "With Files",
-   "set_only_once": 1
+   "read_only": 1
   },
   {
    "fieldname": "database_file",
@@ -167,7 +167,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Offsite",
-   "set_only_once": 1
+   "read_only": 1
   },
   {
    "fieldname": "section_break_21",
@@ -249,7 +249,7 @@
   }
  ],
  "links": [],
- "modified": "2024-05-15 12:20:00.892082",
+ "modified": "2025-05-22 19:27:07.279725",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Site Backup",
