@@ -36,6 +36,12 @@
 			<div class="py-4 text-base text-gray-600">Something went wrong</div>
 		</div>
 		<div v-else-if="options" class="space-y-12 pb-[50vh] pt-12">
+			<AlertBanner
+				v-if="backup"
+				class="mb-4"
+				type="info"
+				:title="`Creating site from backup: <strong>${backup}</strong>`"
+			/>
 			<NewSiteAppSelector
 				:availableApps="selectedVersionAppOptions"
 				:siteOnPublicBench="!bench"
@@ -480,10 +486,11 @@ import NewSiteAppSelector from '../components/site/NewSiteAppSelector.vue';
 import Summary from '../components/Summary.vue';
 import { DashboardError } from '../utils/error';
 import { getCountry } from '../utils/country';
+import AlertBanner from '../components/AlertBanner.vue';
 
 export default {
 	name: 'NewSite',
-	props: ['bench'],
+	props: ['bench', 'backup'],
 	components: {
 		FBreadcrumbs: Breadcrumbs,
 		NewSiteAppSelector,
@@ -495,7 +502,8 @@ export default {
 		TextInput,
 		Tooltip,
 		Summary,
-		Header
+		Header,
+		AlertBanner
 	},
 	mounted() {
 		this.initializeComponent();
@@ -528,6 +536,7 @@ export default {
 			companyName: '',
 			companyNameAbbr: '',
 			showModal: false,
+			backup: this.backup,
 		};
 	},
 	watch: {
@@ -673,6 +682,7 @@ export default {
 							product: this.product,
 							tenancy: this.tenancy,
 							site_plan: this.plan.name,
+							backup: this.backup,
 						}
 					};
 				},

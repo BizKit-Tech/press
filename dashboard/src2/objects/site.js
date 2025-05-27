@@ -563,6 +563,7 @@ export default {
 					},
 					orderBy: 'creation desc',
 					fields: [
+						'name',
 						'job',
 						'status',
 						'database_url',
@@ -814,6 +815,15 @@ export default {
 													}
 												})
 											);
+										}
+									},
+									{
+										label: 'Create New Site from Backup',
+										onClick() {
+											router.push({
+												name: 'New Site from Backup',
+												params: { backup: row.name }
+											});
 										}
 									}
 								]
