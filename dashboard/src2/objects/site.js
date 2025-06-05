@@ -689,17 +689,7 @@ export default {
 						return [
 							{
 								group: 'Details',
-								items: [
-									{
-										label: 'View Job',
-										onClick() {
-											router.push({
-												name: 'Site Job',
-												params: { name: site.name, id: row.job }
-											});
-										}
-									}
-								]
+								items: []
 							},
 							{
 								group: 'Download',
@@ -739,7 +729,7 @@ export default {
 								items: [
 									{
 										label: 'Restore Backup',
-										condition: () => site.doc.status !== 'Archived',
+										condition: () => false, // Disable this action until restoring to the same site is supported
 										onClick() {
 											confirmDialog({
 												title: 'Restore Backup',
@@ -778,6 +768,7 @@ export default {
 									},
 									{
 										label: 'Restore Backup on another Site',
+										condition: () => false, // Disable this action until restoring to another site is supported
 										onClick() {
 											let SelectSiteForRestore = defineAsyncComponent(() =>
 												import('../components/site/SelectSiteForRestore.vue')
