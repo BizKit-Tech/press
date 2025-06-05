@@ -23,6 +23,7 @@ def _new(args):
     product = args.get("product")
     tenancy = args.get("tenancy")
     site_plan = args.get("site_plan")
+    backup = args.get("backup")
     team = frappe.db.get_value("Team", {"team_title": "DevOps"}, "name")
     
     site_plan_details = get_site_plan_details(site_plan)
@@ -59,7 +60,7 @@ def _new(args):
             bench = add_server_to_release_group(release_group, app_server)
         
         print("Creating site")
-        site = create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan)
+        site = create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan, backup)
         
         create_notification({
             "team": team,
@@ -210,7 +211,7 @@ def create_bench(deploy_candidate):
     frappe.db.commit()
     return bench
 
-def create_site(company_name, company_name_abbr, bench_name, product, tenancy, release_group, cluster_name, app_server_name, project_name, team, domain, site_plan):
+def create_site(company_name, company_name_abbr, bench_name, product, tenancy, release_group, cluster_name, app_server_name, project_name, team, domain, site_plan, backup):
     bench_doc = frappe.get_doc("Bench", bench_name)
     bench_apps = [{"app": app.app} for app in bench_doc.apps]
     
@@ -229,6 +230,7 @@ def create_site(company_name, company_name_abbr, bench_name, product, tenancy, r
         "team": team,
         "apps": bench_apps,
         "plan": site_plan,
+        "restored_from_backup": backup
     })
     site_doc.insert()
     frappe.db.commit()

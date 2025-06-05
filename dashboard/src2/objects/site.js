@@ -563,6 +563,7 @@ export default {
 					},
 					orderBy: 'creation desc',
 					fields: [
+						'name',
 						'job',
 						'status',
 						'database_url',
@@ -589,25 +590,16 @@ export default {
 							label: 'Database',
 							fieldname: 'database_size',
 							width: 0.5,
-							format(value) {
-								return value ? bytes(value) : '';
-							}
 						},
 						{
 							label: 'Public Files',
 							fieldname: 'public_size',
 							width: 0.5,
-							format(value) {
-								return value ? bytes(value) : '';
-							}
 						},
 						{
 							label: 'Private Files',
 							fieldname: 'private_size',
 							width: 0.5,
-							format(value) {
-								return value ? bytes(value) : '';
-							}
 						},
 						{
 							label: 'Backup with files',
@@ -644,7 +636,7 @@ export default {
 							if (file == 'database') return 'database';
 							if (file == 'public') return 'public files';
 							if (file == 'private') return 'private files';
-							if (file == 'config') return 'config file';
+							if (file == 'config_file') return 'config file';
 						}
 
 						function confirmDownload(backup, file) {
@@ -697,17 +689,7 @@ export default {
 						return [
 							{
 								group: 'Details',
-								items: [
-									{
-										label: 'View Job',
-										onClick() {
-											router.push({
-												name: 'Site Job',
-												params: { name: site.name, id: row.job }
-											});
-										}
-									}
-								]
+								items: []
 							},
 							{
 								group: 'Download',
@@ -735,7 +717,7 @@ export default {
 									{
 										label: 'Download Config',
 										onClick() {
-											return confirmDownload(row, 'config');
+											return confirmDownload(row, 'config_file');
 										},
 										condition: () => row.config_file_url
 									}
@@ -747,7 +729,7 @@ export default {
 								items: [
 									{
 										label: 'Restore Backup',
-										condition: () => site.doc.status !== 'Archived',
+										condition: () => false, // Disable this action until restoring to the same site is supported
 										onClick() {
 											confirmDialog({
 												title: 'Restore Backup',
@@ -786,6 +768,7 @@ export default {
 									},
 									{
 										label: 'Restore Backup on another Site',
+										condition: () => false, // Disable this action until restoring to another site is supported
 										onClick() {
 											let SelectSiteForRestore = defineAsyncComponent(() =>
 												import('../components/site/SelectSiteForRestore.vue')
@@ -824,6 +807,15 @@ export default {
 												})
 											);
 										}
+									},
+									{
+										label: 'Create New Site from Backup',
+										onClick() {
+											router.push({
+												name: 'New Site from Backup',
+												params: { backup: row.name }
+											});
+										}
 									}
 								]
 							}
@@ -840,7 +832,7 @@ export default {
 								confirmDialog({
 									title: 'Schedule Backup',
 									message:
-										'Are you sure you want to schedule a backup? This will create an onsite backup.',
+										'Are you sure you want to schedule a backup? This will create onsite and offsite backups.',
 									onSuccess({ hide }) {
 										toast.promise(
 											site.backup.submit({

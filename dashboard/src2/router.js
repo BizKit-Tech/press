@@ -82,6 +82,12 @@ let router = createRouter({
 			component: () => import('./pages/NewSite.vue')
 		},
 		{
+			name: 'New Site from Backup',
+			path: '/sites/new/:backup',
+			component: () => import('./pages/NewSite.vue'),
+			props: true
+		},
+		{
 			name: 'Release Group New Site',
 			path: '/groups/:bench/sites/new',
 			component: () => import('./pages/NewSite.vue'),

@@ -156,6 +156,7 @@ class Site(Document, TagHelpers):
 		remote_database_file: DF.Link | None
 		remote_private_file: DF.Link | None
 		remote_public_file: DF.Link | None
+		restored_from_backup: DF.Link | None
 		saas_communication_secret: DF.Data | None
 		server: DF.Link
 		setup_wizard_complete: DF.Check
@@ -978,16 +979,16 @@ class Site(Document, TagHelpers):
 	def get_backup_download_link(self, backup, file):
 		from botocore.exceptions import ClientError
 
-		if file not in ["database", "public", "private", "config"]:
+		if file not in ["database", "public", "private", "config_file"]:
 			frappe.throw("Invalid file type")
 
 		try:
 			remote_file = frappe.db.get_value(
 				"Site Backup",
 				{"name": backup, "site": self.name},
-				f"remote_{file}_file",
+				f"{file}_url",
 			)
-			return frappe.get_doc("Remote File", remote_file).download_link
+			return remote_file
 		except ClientError:
 			log_error(title="Offsite Backup Response Exception")
 

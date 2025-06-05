@@ -2378,3 +2378,11 @@ def new_config_import(args):
 		**args
 	})
 	doc.insert()
+
+@frappe.whitelist()
+def get_backup_details(backup):
+	site, creation = frappe.db.get_value("Site Backup", backup, ["site", "creation"])
+	return {
+		"site": site,
+		"creation": frappe.utils.data.format_datetime(creation, 'dd MMM yyyy, hh:mm a'),
+	}
