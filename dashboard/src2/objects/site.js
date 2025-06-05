@@ -832,7 +832,7 @@ export default {
 								confirmDialog({
 									title: 'Schedule Backup',
 									message:
-										'Are you sure you want to schedule a backup? This will create an onsite backup.',
+										'Are you sure you want to schedule a backup? This will create onsite and offsite backups.',
 									onSuccess({ hide }) {
 										toast.promise(
 											site.backup.submit({
