@@ -636,7 +636,7 @@ export default {
 							if (file == 'database') return 'database';
 							if (file == 'public') return 'public files';
 							if (file == 'private') return 'private files';
-							if (file == 'config') return 'config file';
+							if (file == 'config_file') return 'config file';
 						}
 
 						function confirmDownload(backup, file) {
@@ -727,7 +727,7 @@ export default {
 									{
 										label: 'Download Config',
 										onClick() {
-											return confirmDownload(row, 'config');
+											return confirmDownload(row, 'config_file');
 										},
 										condition: () => row.config_file_url
 									}
