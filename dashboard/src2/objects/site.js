@@ -58,7 +58,10 @@ export default {
 		addTag: 'add_resource_tag',
 		removeTag: 'remove_resource_tag',
 		getBackupDownloadLink: 'get_backup_download_link',
-		fetchDatabaseTableSchemas: 'fetch_database_table_schemas'
+		fetchDatabaseTableSchemas: 'fetch_database_table_schemas',
+		startInstance: 'start_instance',
+		stopInstance: 'stop_instance',
+		rebootInstance: 'reboot_instance'
 	},
 	list: {
 		route: '/sites',

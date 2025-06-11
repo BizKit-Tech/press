@@ -2576,10 +2576,53 @@ class Site(Document, TagHelpers):
 		agent = Agent(self.server)
 		agent.run_after_migrate_steps(self)
 
+	@dashboard_whitelist()
+	def reboot_instance(self):
+		server = frappe.get_doc("Server", self.server)
+		server.reboot_instance()
+
+	@dashboard_whitelist()
+	def stop_instance(self):
+		server = frappe.get_doc("Server", self.server)
+		server.stop_instance()
+
+	@dashboard_whitelist()
+	def start_instance(self):
+		server = frappe.get_doc("Server", self.server)
+		server.start_instance()
+
 	@frappe.whitelist()
 	def get_actions(self):
 		is_group_public = frappe.get_cached_value("Release Group", self.group, "public")
+		server = frappe.get_doc("Server", self.server)
+		server_state = server.instance_state
 
+		actions = [
+			{
+				"action": "Start instance",
+				"description": "Start the instance",
+				"button_label": "Start",
+				"condition": self.status != "Inactive" and server_state == "Stopped",
+				"doc_method": "start_instance",
+			},
+			{
+				"action": "Stop instance",
+				"description": "Stop the instance",
+				"button_label": "Stop",
+				"condition": self.status != "Inactive" and server_state == "Running",
+				"doc_method": "stop_instance",
+			},
+			{
+				"action": "Reboot instance",
+				"description": "Reboot the instance",
+				"button_label": "Reboot",
+				"condition": self.status != "Inactive" and server_state == "Running",
+				"doc_method": "reboot_instance",
+			},
+		]
+
+		# These actions are not yet functional
+		'''
 		actions = [
 			{
 				"action": "Activate site",
@@ -2684,6 +2727,7 @@ class Site(Document, TagHelpers):
 				"group": "Dangerous Actions",
 			},
 		]
+		'''
 
 		return [d for d in actions if d.get("condition", True)]
 
