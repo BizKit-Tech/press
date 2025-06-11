@@ -78,11 +78,62 @@ function getSiteActionHandler(action) {
 		'Schedule backup': onScheduleBackup,
 		'Transfer site': onTransferSite,
 		'Reset site': onSiteReset,
-		'Clear cache': onClearCache
+		'Clear cache': onClearCache,
+		'Start instance': onStartInstance,
+		'Stop instance': onStopInstance,
+		'Reboot instance': onRebootInstance,
 	};
 	if (actionHandlers[action]) {
 		actionHandlers[action].call(this);
 	}
+}
+
+function onStartInstance() {
+	return confirmDialog({
+		title: 'Start Instance',
+		message: `
+			Are you sure you want to start the instance? This will make the site accessible.
+		`,
+		primaryAction: {
+			label: 'Start',
+			variant: 'solid',
+			onClick({ hide }) {
+				return site.startInstance.submit().then(hide);
+			}
+		}
+	});
+}
+
+function onStopInstance() {
+	return confirmDialog({
+		title: 'Stop Instance',
+		message: `
+			Are you sure you want to stop the instance? This will make the site inaccessible.
+		`,
+		primaryAction: {
+			label: 'Stop',
+			variant: 'solid',
+			onClick({ hide }) {
+				return site.stopInstance.submit().then(hide);
+			}
+		}
+	});
+}
+
+function onRebootInstance() {
+	return confirmDialog({
+		title: 'Reboot Instance',
+		message: `
+			Are you sure you want to reboot the instance? This will restart the server.
+		`,
+		primaryAction: {
+			label: 'Reboot',
+			variant: 'solid',
+			onClick({ hide }) {
+				return site.rebootInstance.submit().then(hide);
+			}
+		}
+	});
 }
 
 function onDeactivateSite() {
