@@ -1,0 +1,9 @@
+---
+- name: Change state of an instance by its ID
+  amazon.aws.ec2_instance:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    instance_ids:
+      - '{{ instance_id }}'
+    state: '{{ state }}'
+    region: ap-southeast-1

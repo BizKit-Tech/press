@@ -2020,7 +2020,7 @@ class Server(BaseServer):
 				user=self._ssh_user(),
 				port=self._ssh_port(),
 				variables={
-					"instance_id": self.private_ip,
+					"instance_id": self.instance_id,
 					"ec2_access_key": aws_access_key_id,
 					"ec2_secret_key": aws_secret_access_key,
 					"state": state,
