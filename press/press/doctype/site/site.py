@@ -345,8 +345,8 @@ class Site(Document, TagHelpers):
 		if len(self.subdomain) > 32:
 			frappe.throw("Subdomain too long. Use 32 or less characters")
 
-		if len(self.subdomain) < 5:
-			frappe.throw("Subdomain too short. Use 5 or more characters")
+		if len(self.subdomain) < 3:
+			frappe.throw("Subdomain too short. Use 3 or more characters")
 
 	def set_site_admin_password(self):
 		# set site.admin_password if doesn't exist
