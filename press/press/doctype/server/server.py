@@ -2038,6 +2038,32 @@ class Server(BaseServer):
 			log_error("Change Instance State Exception", server=self.as_dict())
 		self.save()
 
+	def _change_termination_protection(self, termination_protection):
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		try:
+			ansible = Ansible(
+				playbook="termination_protection.yml",
+				server=self,
+				user=self._ssh_user(),
+				port=self._ssh_port(),
+				variables={
+					"instance_id": self.instance_id,
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+					"termination_protection": termination_protection,
+				},
+			)
+			play = ansible.run()
+			self.reload()
+			if play.status == "Success":
+				self.termination_protection = "Enabled" if termination_protection == "true" else "Disabled"
+		except Exception:
+			log_error("Change Termination Protection Exception", server=self.as_dict())
+		self.save()
+
 	@frappe.whitelist()
 	def stop_instance(self):
 		state = "stopped"
@@ -2052,6 +2078,16 @@ class Server(BaseServer):
 	def reboot_instance(self):
 		state = "rebooted"
 		self._change_instance_state(state)
+
+	@frappe.whitelist()
+	def enable_termination_protection(self):
+		termination_protection = "true"
+		self._change_termination_protection(termination_protection)
+	
+	@frappe.whitelist()
+	def disable_termination_protection(self):
+		termination_protection = "false"
+		self._change_termination_protection(termination_protection)
 
 
 def scale_workers(now=False):

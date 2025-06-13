@@ -2591,11 +2591,22 @@ class Site(Document, TagHelpers):
 		server = frappe.get_doc("Server", self.server)
 		server.start_instance()
 
+	@dashboard_whitelist()
+	def disable_termination_protection(self):
+		server = frappe.get_doc("Server", self.server)
+		server.disable_termination_protection()
+
+	@dashboard_whitelist()
+	def enable_termination_protection(self):
+		server = frappe.get_doc("Server", self.server)
+		server.enable_termination_protection()
+
 	@frappe.whitelist()
 	def get_actions(self):
 		is_group_public = frappe.get_cached_value("Release Group", self.group, "public")
 		server = frappe.get_doc("Server", self.server)
 		server_state = server.instance_state
+		termination_protection = server.termination_protection
 
 		actions = [
 			{
@@ -2618,6 +2629,30 @@ class Site(Document, TagHelpers):
 				"button_label": "Reboot",
 				"condition": self.status != "Inactive" and server_state == "Running",
 				"doc_method": "reboot_instance",
+			},
+			{
+				"group": "Dangerous Actions",
+				"action": "Disable termination protection",
+				"description": "Termination protection prevents accidental deletion of your site. To delete your site, you must disable termination protection first",
+				"button_label": "Disable",
+				"doc_method": "disable_termination_protection",
+				"condition": termination_protection == "Enabled",
+			},
+			{
+				"group": "Dangerous Actions",
+				"action": "Enable termination protection",
+				"description": "Termination protection prevents accidental deletion of your site",
+				"button_label": "Enable",
+				"doc_method": "enable_termination_protection",
+				"condition": termination_protection == "Disabled",
+			},
+			{
+				"group": "Dangerous Actions",
+				"action": "Drop site",
+				"description": "When you drop your site, all site data is deleted forever",
+				"button_label": "Drop",
+				"doc_method": "drop_site",
+				"condition": termination_protection == "Disabled",
 			},
 		]
 
