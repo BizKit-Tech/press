@@ -1352,6 +1352,7 @@ class Server(BaseServer):
 		status: DF.Literal["Pending", "Installing", "Active", "Broken", "Archived"]
 		tags: DF.Table[ResourceTag]
 		team: DF.Link | None
+		termination_protection: DF.Literal["Enabled", "Disabled"]
 		title: DF.Data | None
 		use_for_build: DF.Check
 		use_for_new_benches: DF.Check

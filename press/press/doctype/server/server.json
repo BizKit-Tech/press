@@ -18,6 +18,7 @@
   "provider",
   "virtual_machine",
   "ignore_incidents_since",
+  "termination_protection",
   "is_server_prepared",
   "is_server_setup",
   "is_self_hosted",
@@ -627,10 +628,18 @@
    "label": "Instance State",
    "options": "Pending\nRunning\nStopped\nRebooting",
    "read_only": 1
+  },
+  {
+   "default": "Enabled",
+   "fieldname": "termination_protection",
+   "fieldtype": "Select",
+   "label": "Termination Protection",
+   "options": "Enabled\nDisabled",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2025-03-03 20:26:09.380392",
+ "modified": "2025-06-13 13:22:00.414250",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",
