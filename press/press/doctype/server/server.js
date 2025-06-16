@@ -81,6 +81,12 @@ frappe.ui.form.on('Server', {
 				true,
 				frm.doc.termination_protection === 'Enabled',
 			],
+			[
+				__('Terminate Instance'),
+				'terminate_instance',
+				true,
+				frm.doc.termination_protection === 'Disabled',
+			],
 			// [__('Update Agent'), 'update_agent', true, frm.doc.is_server_setup],
 			// [
 			// 	__('Update Agent Ansible'),

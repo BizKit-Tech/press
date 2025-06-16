@@ -211,7 +211,7 @@ function onDropSite() {
 	return confirmDialog({
 		title: 'Drop Site',
 		message: `
-            Are you sure you want to drop your site? The site will be archived and
+            Are you sure you want to drop your site? The site will be deleted and
             all of its files and Offsite Backups will be deleted. This action cannot
             be undone.
         `,
@@ -242,7 +242,7 @@ function onDropSite() {
 					import('./ChurnFeedbackDialog.vue')
 				);
 
-				return site.archive.submit({ force: values.force }).then(() => {
+				return site.dropSite.submit({ force: values.force }).then(() => {
 					hide();
 					if (val) {
 						renderDialog(

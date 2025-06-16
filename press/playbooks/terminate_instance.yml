@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    instance_id: '{{ instance_id }}'
+    ip_address: '{{ ip_address }}'
+    security_group: '{{ security_group }}'
+  roles:
+    - role: terminate_instance

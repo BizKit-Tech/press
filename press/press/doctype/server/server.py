@@ -2089,6 +2089,39 @@ class Server(BaseServer):
 		termination_protection = "false"
 		self._change_termination_protection(termination_protection)
 
+	@frappe.whitelist()
+	def terminate_instance(self):
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		try:
+			ansible = Ansible(
+				playbook="terminate_instance.yml",
+				server=self,
+				user=self._ssh_user(),
+				port=self._ssh_port(),
+				variables={
+					"instance_id": self.instance_id,
+					"ip_address": self.ip,
+					"security_group": self.security_group,
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key
+				},
+			)
+			play = ansible.run()
+			self.reload()
+			if play.status == "Success":
+				self.status = "Archived"
+				self.instance_state = "Stopped"
+				self.is_server_setup = False
+				self.is_connected_to_database = False
+			else:
+				log_error("Instance Termination Failed", server=self.as_dict())
+		except Exception:
+			log_error("Instance Termination Exception", server=self.as_dict())
+		self.save()
+
 
 def scale_workers(now=False):
 	servers = frappe.get_all("Server", {"status": "Active", "is_primary": True})
