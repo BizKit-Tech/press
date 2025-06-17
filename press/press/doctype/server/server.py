@@ -1301,6 +1301,7 @@ class Server(BaseServer):
 		auto_add_storage_min: DF.Int
 		cluster: DF.Link | None
 		database_name: DF.Data | None
+		database_security_group: DF.Data | None
 		database_server: DF.Link | None
 		disable_agent_job_auto_retry: DF.Check
 		domain: DF.Link | None
@@ -1573,6 +1574,12 @@ class Server(BaseServer):
 
 		vpc_id = frappe.db.get_value("Cluster", self.cluster, "vpc_id")
 
+		ENVIRONMENT_ABBR = {
+			"Development": "dev",
+			"Production": "prod",
+			"Demo": "demo",
+		}
+
 		try:
 			ansible = Ansible(
 				playbook="modify_security_group.yml",
@@ -1583,7 +1590,7 @@ class Server(BaseServer):
 					"rds_instance_id": rds_intance_id,
 					"instance_name": rds_title,
 					"vpc_id": vpc_id,
-					"new_sec_group": f"{self.hostname_abbreviation}-ec2-rds",
+					"new_sec_group": f"{self.hostname_abbreviation}-{ENVIRONMENT_ABBR[self.environment]}-ec2-rds",
 					"ec2_sec_group": self.security_group,
 					"ec2_access_key": aws_access_key_id,
 					"ec2_secret_key": aws_secret_access_key,
@@ -1593,6 +1600,14 @@ class Server(BaseServer):
 			self.reload()
 			if play.status == "Success":
 				self.is_connected_to_database = True
+
+				task = frappe.get_doc("Ansible Task", {"play": play.name, "task": "Allow communication between EC2 and RDS"})
+				task_result = json.loads(task.result)
+				self.database_security_group = task_result["group_id"]
+				
+				db_doc = frappe.get_doc("Database Server", self.database_server)
+				db_doc.security_group = db_doc.security_group + f',{task_result["group_id"]}'
+				db_doc.save()
 			else:
 				log_error("EC2 to RDS Connection Exception", server=self.as_dict())
 		except Exception:
@@ -2095,6 +2110,15 @@ class Server(BaseServer):
 		aws_access_key_id = settings.aws_access_key_id
 		aws_secret_access_key = settings.get_password("aws_secret_access_key")
 
+		rds_instance_id = frappe.db.get_value("Database Server", self.database_server, "ip")
+		rds_instance_id = rds_instance_id.split(".")[0] if rds_instance_id else ""
+
+		rds_security_groups = frappe.db.get_value("Database Server", self.database_server, "security_group")
+		rds_security_groups = rds_security_groups.split(",") if rds_security_groups else []
+		rds_security_groups = [
+			group.strip() for group in rds_security_groups if group.strip() != self.database_security_group
+		]
+
 		try:
 			ansible = Ansible(
 				playbook="terminate_instance.yml",
@@ -2106,7 +2130,10 @@ class Server(BaseServer):
 					"ip_address": self.ip,
 					"security_group": self.security_group,
 					"ec2_access_key": aws_access_key_id,
-					"ec2_secret_key": aws_secret_access_key
+					"ec2_secret_key": aws_secret_access_key,
+					"rds_instance_id": rds_instance_id,
+					"rds_security_groups": rds_security_groups,
+					"db_security_group": self.database_security_group
 				},
 			)
 			play = ansible.run()
@@ -2116,6 +2143,10 @@ class Server(BaseServer):
 				self.instance_state = "Stopped"
 				self.is_server_setup = False
 				self.is_connected_to_database = False
+
+				frappe.db.set_value(
+					"Database Server", self.database_server, "security_group", rds_security_groups.join(",")
+				)
 			else:
 				log_error("Instance Termination Failed", server=self.as_dict())
 		except Exception:

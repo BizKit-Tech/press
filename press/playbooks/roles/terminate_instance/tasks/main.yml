@@ -18,7 +18,24 @@
     state: 'absent'
     region: ap-southeast-1
 
-- name: Delete security group
+- name: Remove EC2-RDS security group from RDS
+  amazon.aws.rds_instance:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    id: '{{ rds_instance_id }}'
+    state: 'present'
+    vpc_security_group_ids: '{{ rds_security_groups }}'
+    region: ap-southeast-1
+
+- name: Delete EC2-RDS security group
+  amazon.aws.ec2_security_group:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    group_id: '{{ db_security_group }}'
+    state: 'absent'
+    region: ap-southeast-1
+
+- name: Delete EC2 security group
   amazon.aws.ec2_security_group:
     aws_access_key: '{{ ec2_access_key }}'
     aws_secret_key: '{{ ec2_secret_key }}'
