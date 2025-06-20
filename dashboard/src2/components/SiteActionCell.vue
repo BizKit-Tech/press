@@ -82,6 +82,8 @@ function getSiteActionHandler(action) {
 		'Start instance': onStartInstance,
 		'Stop instance': onStopInstance,
 		'Reboot instance': onRebootInstance,
+		'Enable termination protection': onEnableTerminationProtection,
+		'Disable termination protection': onDisableTerminationProtection
 	};
 	if (actionHandlers[action]) {
 		actionHandlers[action].call(this);
@@ -136,6 +138,39 @@ function onRebootInstance() {
 	});
 }
 
+function onEnableTerminationProtection() {
+	return confirmDialog({
+		title: 'Enable Termination Protection',
+		message: `
+			Are you sure you want to enable termination protection? This will prevent the site from being deleted.
+		`,
+		primaryAction: {
+			label: 'Enable',
+			variant: 'solid',
+			onClick({ hide }) {
+				return site.enableTerminationProtection.submit().then(hide);
+			}
+		}
+	});
+}
+
+function onDisableTerminationProtection() {
+	return confirmDialog({
+		title: 'Disable Termination Protection',
+		message: `
+			Are you sure you want to disable termination protection? This will allow the site to be deleted.
+		`,
+		primaryAction: {
+			label: 'Disable',
+			variant: 'solid',
+			theme: 'red',
+			onClick({ hide }) {
+				return site.disableTerminationProtection.submit().then(hide);
+			}
+		}
+	});
+}
+
 function onDeactivateSite() {
 	return confirmDialog({
 		title: 'Deactivate Site',
@@ -176,7 +211,7 @@ function onDropSite() {
 	return confirmDialog({
 		title: 'Drop Site',
 		message: `
-            Are you sure you want to drop your site? The site will be archived and
+            Are you sure you want to drop your site? The site will be deleted and
             all of its files and Offsite Backups will be deleted. This action cannot
             be undone.
         `,
@@ -207,7 +242,7 @@ function onDropSite() {
 					import('./ChurnFeedbackDialog.vue')
 				);
 
-				return site.archive.submit({ force: values.force }).then(() => {
+				return site.dropSite.submit({ force: values.force }).then(() => {
 					hide();
 					if (val) {
 						renderDialog(

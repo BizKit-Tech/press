@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    instance_id: '{{ instance_id }}'
+    termination_protection: '{{ termination_protection }}'
+  roles:
+    - role: change_termination_protection

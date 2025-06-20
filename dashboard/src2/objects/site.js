@@ -61,7 +61,10 @@ export default {
 		fetchDatabaseTableSchemas: 'fetch_database_table_schemas',
 		startInstance: 'start_instance',
 		stopInstance: 'stop_instance',
-		rebootInstance: 'reboot_instance'
+		rebootInstance: 'reboot_instance',
+		enableTerminationProtection: 'enable_termination_protection',
+		disableTerminationProtection: 'disable_termination_protection',
+		dropSite: 'drop_site'
 	},
 	list: {
 		route: '/sites',

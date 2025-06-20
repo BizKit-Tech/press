@@ -100,41 +100,41 @@ frappe.ui.form.on('Site', {
 					frm.doc.status,
 				),
 			],
-			[__('Archive'), 'archive', frm.doc.status !== 'Archived'],
-			[__('Cleanup after Archive'), 'cleanup_after_archive'],
-			[__('Sync Apps'), 'sync_apps'],
-			[__('Migrate'), 'migrate'],
-			[__('Reinstall'), 'reinstall'],
-			[__('Restore'), 'restore_site'],
-			[__('Restore Tables'), 'restore_tables'],
-			[__('Update'), 'schedule_update'],
-			[__('Deactivate'), 'deactivate'],
-			[__('Activate'), 'activate', frm.doc.status !== 'Archived'],
-			[__('Reset Site Usage'), 'reset_site_usage'],
-			[__('Clear Cache'), 'clear_site_cache'],
-			[__('Optimize Tables'), 'optimize_tables'],
-			[__('Update Site Config'), 'update_site_config'],
-			[__('Create DNS Record'), 'create_dns_record'],
-			[__('Run After Migrate Steps'), 'run_after_migrate_steps'],
-			[__('Retry Rename'), 'retry_rename'],
-			[
-				__('Retry Archive'),
-				'retry_archive',
-				frm.doc.name.includes('.archived'),
-			],
-			[__('Update without Backup'), 'update_without_backup'],
-			[
-				__('Fetch bench from Agent'),
-				'fetch_bench_from_agent',
-				frm.doc.status !== 'Archived',
-			],
-			[
-				__('Set status based on Ping'),
-				'set_status_based_on_ping',
-				!['Active', 'Archived', 'Inactive', 'Suspended'].includes(
-					frm.doc.status,
-				),
-			],
+			// [__('Archive'), 'archive', frm.doc.status !== 'Archived'],
+			// [__('Cleanup after Archive'), 'cleanup_after_archive'],
+			// [__('Sync Apps'), 'sync_apps'],
+			// [__('Migrate'), 'migrate'],
+			// [__('Reinstall'), 'reinstall'],
+			// [__('Restore'), 'restore_site'],
+			// [__('Restore Tables'), 'restore_tables'],
+			// [__('Update'), 'schedule_update'],
+			// [__('Deactivate'), 'deactivate'],
+			// [__('Activate'), 'activate', frm.doc.status !== 'Archived'],
+			// [__('Reset Site Usage'), 'reset_site_usage'],
+			// [__('Clear Cache'), 'clear_site_cache'],
+			// [__('Optimize Tables'), 'optimize_tables'],
+			// [__('Update Site Config'), 'update_site_config'],
+			// [__('Create DNS Record'), 'create_dns_record'],
+			// [__('Run After Migrate Steps'), 'run_after_migrate_steps'],
+			// [__('Retry Rename'), 'retry_rename'],
+			// [
+			// 	__('Retry Archive'),
+			// 	'retry_archive',
+			// 	frm.doc.name.includes('.archived'),
+			// ],
+			// [__('Update without Backup'), 'update_without_backup'],
+			// [
+			// 	__('Fetch bench from Agent'),
+			// 	'fetch_bench_from_agent',
+			// 	frm.doc.status !== 'Archived',
+			// ],
+			// [
+			// 	__('Set status based on Ping'),
+			// 	'set_status_based_on_ping',
+			// 	!['Active', 'Archived', 'Inactive', 'Suspended'].includes(
+			// 		frm.doc.status,
+			// 	),
+			// ],
 			[__('Show Admin Password'), 'show_admin_password'],
 		].forEach(([label, method, condition]) => {
 			if (typeof condition === 'undefined' || condition) {
@@ -151,101 +151,101 @@ frappe.ui.form.on('Site', {
 			}
 		});
 
-		frm.add_custom_button(
-			__('Force Archive'),
-			() => {
-				frappe.confirm(`Are you sure you want to force drop this site?`, () =>
-					frm.call('archive', { force: true }).then((r) => frm.refresh()),
-				);
-			},
-			__('Actions'),
-		);
+		// frm.add_custom_button(
+		// 	__('Force Archive'),
+		// 	() => {
+		// 		frappe.confirm(`Are you sure you want to force drop this site?`, () =>
+		// 			frm.call('archive', { force: true }).then((r) => frm.refresh()),
+		// 		);
+		// 	},
+		// 	__('Actions'),
+		// );
 
-		[
-			[__('Suspend'), 'suspend'],
-			[__('Unsuspend'), 'unsuspend'],
-		].forEach(([label, method]) => {
-			frm.add_custom_button(
-				label,
-				() => {
-					frappe.prompt(
-						{
-							fieldtype: 'Data',
-							label: 'Reason',
-							fieldname: 'reason',
-							reqd: 1,
-						},
-						({ reason }) => {
-							frm
-								.call(method, {
-									reason,
-								})
-								.then((r) => frm.refresh());
-						},
-						__('Provide Reason'),
-					);
-				},
-				__('Actions'),
-			);
-		});
+		// [
+		// 	[__('Suspend'), 'suspend'],
+		// 	[__('Unsuspend'), 'unsuspend'],
+		// ].forEach(([label, method]) => {
+		// 	frm.add_custom_button(
+		// 		label,
+		// 		() => {
+		// 			frappe.prompt(
+		// 				{
+		// 					fieldtype: 'Data',
+		// 					label: 'Reason',
+		// 					fieldname: 'reason',
+		// 					reqd: 1,
+		// 				},
+		// 				({ reason }) => {
+		// 					frm
+		// 						.call(method, {
+		// 							reason,
+		// 						})
+		// 						.then((r) => frm.refresh());
+		// 				},
+		// 				__('Provide Reason'),
+		// 			);
+		// 		},
+		// 		__('Actions'),
+		// 	);
+		// });
 		frm.toggle_enable(['host_name'], frm.doc.status === 'Active');
 
-		frm.add_custom_button(
-			__('Replicate Site'),
-			() => {
-				const dialog = new frappe.ui.Dialog({
-					title: __('New Subdomain for Test Site'),
-					fields: [
-						{
-							fieldtype: 'Data',
-							fieldname: 'subdomain',
-							label: 'New Subdomain',
-							reqd: 1,
-						},
-					],
-					primary_action({ subdomain }) {
-						frappe.set_route('List', 'Site Replication', {
-							site: frm.doc.name,
-						});
-						frappe.new_doc('Site Replication', {
-							site: frm.doc.name,
-							subdomain: subdomain,
-						});
-					},
-				});
-				dialog.show();
-			},
-			__('Actions'),
-		);
+		// frm.add_custom_button(
+		// 	__('Replicate Site'),
+		// 	() => {
+		// 		const dialog = new frappe.ui.Dialog({
+		// 			title: __('New Subdomain for Test Site'),
+		// 			fields: [
+		// 				{
+		// 					fieldtype: 'Data',
+		// 					fieldname: 'subdomain',
+		// 					label: 'New Subdomain',
+		// 					reqd: 1,
+		// 				},
+		// 			],
+		// 			primary_action({ subdomain }) {
+		// 				frappe.set_route('List', 'Site Replication', {
+		// 					site: frm.doc.name,
+		// 				});
+		// 				frappe.new_doc('Site Replication', {
+		// 					site: frm.doc.name,
+		// 					subdomain: subdomain,
+		// 				});
+		// 			},
+		// 		});
+		// 		dialog.show();
+		// 	},
+		// 	__('Actions'),
+		// );
 
-		frm.add_custom_button(
-			__('Update DNS Record'),
-			() => {
-				const dialog = new frappe.ui.Dialog({
-					title: __('Update DNS Record'),
-					fields: [
-						{
-							fieldtype: 'Data',
-							fieldname: 'value',
-							label: 'Value',
-							description: "Site's CNAME record will point to this value",
-							reqd: 1,
-						},
-					],
-					primary_action(args) {
-						frm
-							.call('update_dns_record', {
-								value: args.value,
-							})
-							.then(() => {
-								dialog.hide();
-							});
-					},
-				});
-				dialog.show();
-			},
-			__('Dangerous Actions'),
-		);
+		// frm.add_custom_button(
+		// 	__('Update DNS Record'),
+		// 	() => {
+		// 		const dialog = new frappe.ui.Dialog({
+		// 			title: __('Update DNS Record'),
+		// 			fields: [
+		// 				{
+		// 					fieldtype: 'Data',
+		// 					fieldname: 'value',
+		// 					label: 'Value',
+		// 					description: "Site's CNAME record will point to this value",
+		// 					reqd: 1,
+		// 				},
+		// 			],
+		// 			primary_action(args) {
+		// 				frm
+		// 					.call('update_dns_record', {
+		// 						value: args.value,
+		// 					})
+		// 					.then(() => {
+		// 						dialog.hide();
+		// 					});
+		// 			},
+		// 		});
+		// 		dialog.show();
+		// 	},
+		// 	__('Dangerous Actions'),
+		// );
 
 		frm.add_custom_button(
 			__('Move to Group'),
@@ -292,126 +292,126 @@ frappe.ui.form.on('Site', {
 			__('Actions'),
 		);
 
-		frm.add_custom_button(
-			__('Forcefully Remove Site'),
-			() => {
-				const dialog = new frappe.ui.Dialog({
-					title: __('Forcefully Remove Site'),
-					fields: [
-						{
-							fieldtype: 'Link',
-							options: 'Bench',
-							label: __('Bench'),
-							fieldname: 'bench',
-							reqd: 1,
-							get_query: () => {
-								return {
-									filters: [
-										['name', '!=', frm.doc.bench],
-										['status', '!=', 'Archived'],
-									],
-								};
-							},
-						},
-						{
-							fieldtype: 'Check',
-							label: __("I know what I'm doing"),
-							fieldname: 'confirmation',
-							reqd: 1,
-						},
-					],
-				});
+// 		frm.add_custom_button(
+// 			__('Forcefully Remove Site'),
+// 			() => {
+// 				const dialog = new frappe.ui.Dialog({
+// 					title: __('Forcefully Remove Site'),
+// 					fields: [
+// 						{
+// 							fieldtype: 'Link',
+// 							options: 'Bench',
+// 							label: __('Bench'),
+// 							fieldname: 'bench',
+// 							reqd: 1,
+// 							get_query: () => {
+// 								return {
+// 									filters: [
+// 										['name', '!=', frm.doc.bench],
+// 										['status', '!=', 'Archived'],
+// 									],
+// 								};
+// 							},
+// 						},
+// 						{
+// 							fieldtype: 'Check',
+// 							label: __("I know what I'm doing"),
+// 							fieldname: 'confirmation',
+// 							reqd: 1,
+// 						},
+// 					],
+// 				});
 
-				dialog.set_primary_action(__('Forcefully Remove Site'), (args) => {
-					if (!args.confirmation) {
-						frappe.throw(__("Please confirm that you know what you're doing"));
-					}
-					frm
-						.call('forcefully_remove_site', {
-							bench: args.bench,
-						})
-						.then((r) => {
-							dialog.hide();
-							frm.refresh();
-							if (r.message.job) {
-								message = `
-Removing site from **${r.message.bench}**.
+// 				dialog.set_primary_action(__('Forcefully Remove Site'), (args) => {
+// 					if (!args.confirmation) {
+// 						frappe.throw(__("Please confirm that you know what you're doing"));
+// 					}
+// 					frm
+// 						.call('forcefully_remove_site', {
+// 							bench: args.bench,
+// 						})
+// 						.then((r) => {
+// 							dialog.hide();
+// 							frm.refresh();
+// 							if (r.message.job) {
+// 								message = `
+// Removing site from **${r.message.bench}**.
 
-Track progress [here](https://${r.message.server}/agent/jobs/${r.message.job}).`;
-								frappe.msgprint(frappe.markdown(message), 'Removing Site');
-							} else {
-								message = `
-Couldn't remove site from **${r.message.bench}**.
-\`\`\`
-${r.message.error}
-\`\`\``;
-								frappe.msgprint(
-									frappe.markdown(message),
-									'Failed to Remove Site',
-								);
-							}
-						});
-				});
+// Track progress [here](https://${r.message.server}/agent/jobs/${r.message.job}).`;
+// 								frappe.msgprint(frappe.markdown(message), 'Removing Site');
+// 							} else {
+// 								message = `
+// Couldn't remove site from **${r.message.bench}**.
+// \`\`\`
+// ${r.message.error}
+// \`\`\``;
+// 								frappe.msgprint(
+// 									frappe.markdown(message),
+// 									'Failed to Remove Site',
+// 								);
+// 							}
+// 						});
+// 				});
 
-				dialog.show();
-			},
-			__('Dangerous Actions'),
-		);
+// 				dialog.show();
+// 			},
+// 			__('Dangerous Actions'),
+// 		);
 
-		frm.add_custom_button(
-			__('Forcefully Move Site'),
-			() => {
-				const dialog = new frappe.ui.Dialog({
-					title: __('Forcefully Move Site'),
-					fields: [
-						{
-							fieldtype: 'Link',
-							options: 'Bench',
-							label: __('Bench'),
-							fieldname: 'bench',
-							reqd: 1,
-							get_query: () => {
-								return {
-									filters: [
-										['name', '!=', frm.doc.bench],
-										['status', '!=', 'Archived'],
-									],
-								};
-							},
-						},
-						{
-							fieldtype: 'Check',
-							label: __("I know what I'm doing"),
-							fieldname: 'confirmation',
-							reqd: 1,
-						},
-						{
-							fieldtype: 'Check',
-							label: __('Deactivate'),
-							fieldname: 'deactivate',
-						},
-					],
-				});
+		// frm.add_custom_button(
+		// 	__('Forcefully Move Site'),
+		// 	() => {
+		// 		const dialog = new frappe.ui.Dialog({
+		// 			title: __('Forcefully Move Site'),
+		// 			fields: [
+		// 				{
+		// 					fieldtype: 'Link',
+		// 					options: 'Bench',
+		// 					label: __('Bench'),
+		// 					fieldname: 'bench',
+		// 					reqd: 1,
+		// 					get_query: () => {
+		// 						return {
+		// 							filters: [
+		// 								['name', '!=', frm.doc.bench],
+		// 								['status', '!=', 'Archived'],
+		// 							],
+		// 						};
+		// 					},
+		// 				},
+		// 				{
+		// 					fieldtype: 'Check',
+		// 					label: __("I know what I'm doing"),
+		// 					fieldname: 'confirmation',
+		// 					reqd: 1,
+		// 				},
+		// 				{
+		// 					fieldtype: 'Check',
+		// 					label: __('Deactivate'),
+		// 					fieldname: 'deactivate',
+		// 				},
+		// 			],
+		// 		});
 
-				dialog.set_primary_action(__('Forcefully Move Site'), (args) => {
-					if (!args.confirmation) {
-						frappe.throw(__("Please confirm that you know what you're doing"));
-					}
-					frm
-						.call('move_to_bench', {
-							bench: args.bench,
-							deactivate: args.deactivate,
-						})
-						.then(() => {
-							dialog.hide();
-							frm.refresh();
-						});
-				});
+		// 		dialog.set_primary_action(__('Forcefully Move Site'), (args) => {
+		// 			if (!args.confirmation) {
+		// 				frappe.throw(__("Please confirm that you know what you're doing"));
+		// 			}
+		// 			frm
+		// 				.call('move_to_bench', {
+		// 					bench: args.bench,
+		// 					deactivate: args.deactivate,
+		// 				})
+		// 				.then(() => {
+		// 					dialog.hide();
+		// 					frm.refresh();
+		// 				});
+		// 		});
 
-				dialog.show();
-			},
-			__('Dangerous Actions'),
-		);
+		// 		dialog.show();
+		// 	},
+		// 	__('Dangerous Actions'),
+		// );
 	},
 	company_name: function (frm) {
 		const company_abbr = frm.doc.company_name.split(' ').map(word => word[0]).join('');

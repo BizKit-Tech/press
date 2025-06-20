@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    instance_id: '{{ instance_id }}'
+    ip_address: '{{ ip_address }}'
+    security_group: '{{ security_group }}'
+    rds_instance_id: '{{ rds_instance_id }}'
+    rds_security_groups: '{{ rds_security_groups }}'
+    db_security_group: '{{ db_security_group }}'
+  roles:
+    - role: terminate_instance

@@ -34,6 +34,9 @@ from frappe.utils import (
 	sbool,
 	time_diff_in_hours,
 )
+from frappe.model.rename_doc import get_link_fields
+from frappe.model.docstatus import DocStatus
+from frappe.model.dynamic_links import get_dynamic_link_map
 
 from press.exceptions import (
 	CannotChangePlan,
@@ -2591,11 +2594,26 @@ class Site(Document, TagHelpers):
 		server = frappe.get_doc("Server", self.server)
 		server.start_instance()
 
+	@dashboard_whitelist()
+	def disable_termination_protection(self):
+		server = frappe.get_doc("Server", self.server)
+		server.disable_termination_protection()
+
+	@dashboard_whitelist()
+	def enable_termination_protection(self):
+		server = frappe.get_doc("Server", self.server)
+		server.enable_termination_protection()
+
+	@dashboard_whitelist()
+	def drop_site(self):
+		delete_site_and_related_docs(self)
+
 	@frappe.whitelist()
 	def get_actions(self):
 		is_group_public = frappe.get_cached_value("Release Group", self.group, "public")
 		server = frappe.get_doc("Server", self.server)
 		server_state = server.instance_state
+		termination_protection = server.termination_protection
 
 		actions = [
 			{
@@ -2618,6 +2636,30 @@ class Site(Document, TagHelpers):
 				"button_label": "Reboot",
 				"condition": self.status != "Inactive" and server_state == "Running",
 				"doc_method": "reboot_instance",
+			},
+			{
+				"group": "Dangerous Actions",
+				"action": "Disable termination protection",
+				"description": "Termination protection prevents accidental deletion of your site. To delete your site, you must disable termination protection first",
+				"button_label": "Disable",
+				"doc_method": "disable_termination_protection",
+				"condition": termination_protection == "Enabled",
+			},
+			{
+				"group": "Dangerous Actions",
+				"action": "Enable termination protection",
+				"description": "Termination protection prevents accidental deletion of your site",
+				"button_label": "Enable",
+				"doc_method": "enable_termination_protection",
+				"condition": termination_protection == "Disabled",
+			},
+			{
+				"group": "Dangerous Actions",
+				"action": "Drop site",
+				"description": "When you drop your site, all site data is deleted forever",
+				"button_label": "Drop",
+				"doc_method": "drop_site",
+				"condition": termination_protection == "Disabled",
 			},
 		]
 
@@ -3652,3 +3694,157 @@ def create_site_status_update_webhook_event(site: str):
 	if record.team == "Administrator":
 		return
 	create_webhook_event("Site Status Update", record, record.team)
+
+
+def delete_site_and_related_docs(doc):
+	# Delete Site
+	frappe.db.delete("Site Domain", doc.name)
+	delete_linked_docs(doc)
+	delete_dynamically_linked_docs(doc)
+	doc.delete()
+
+	# Delete Bench
+	bench_doc = frappe.get_doc("Bench", doc.bench)
+	delete_linked_docs(bench_doc)
+	delete_dynamically_linked_docs(bench_doc)
+	bench_doc.delete()
+	
+	# Delete Deploy
+	deploy = frappe.db.get_value("Deploy Bench", {"bench": doc.bench}, "parent")
+	frappe.delete_doc("Deploy", deploy)
+	
+	# Remove app server from Release Group
+	release_group = frappe.get_doc("Release Group", bench_doc.group)
+	servers = release_group.get("servers", [])
+	servers = [server for server in servers if server.server != doc.server]
+	release_group.set("servers", servers)
+	release_group.save()
+	
+	# Delete App Server
+	server_doc = frappe.get_doc("Server", doc.server)
+	server_doc.terminate_instance()
+	server_doc.reload()
+	if server_doc.status == "Archived":
+		delete_linked_docs(server_doc)
+		delete_dynamically_linked_docs(server_doc)
+		server_doc.delete()
+
+
+def delete_linked_docs(doc, method="Delete"):
+	link_fields = get_link_fields(doc.doctype)
+	ignored_doctypes = set()
+
+	if method == "Cancel" and (doc_ignore_flags := doc.get("ignore_linked_doctypes")):
+		ignored_doctypes.update(doc_ignore_flags)
+	if method == "Delete":
+		ignored_doctypes.update(frappe.get_hooks("ignore_links_on_delete"))
+
+	for lf in link_fields:
+		link_dt, link_field, issingle = lf["parent"], lf["fieldname"], lf["issingle"]
+		if link_dt in ignored_doctypes or (link_field == "amended_from" and method == "Cancel"):
+			continue
+
+		try:
+			meta = frappe.get_meta(link_dt)
+		except frappe.DoesNotExistError:
+			frappe.clear_last_message()
+			# This mostly happens when app do not remove their customizations, we shouldn't
+			# prevent link checks from failing in those cases
+			continue
+
+		if issingle:
+			if frappe.db.get_single_value(link_dt, link_field) == doc.name:
+				raise_link_exists_exception(doc, link_dt, link_dt)
+			continue
+
+		fields = ["name", "docstatus"]
+
+		if meta.istable:
+			fields.extend(["parent", "parenttype"])
+
+		for item in frappe.db.get_values(link_dt, {link_field: doc.name}, fields, as_dict=True):
+			# available only in child table cases
+			item_parent = getattr(item, "parent", None)
+			linked_parent_doctype = item.parenttype if item_parent else link_dt
+
+			if linked_parent_doctype in ignored_doctypes:
+				continue
+
+			if method != "Delete" and (method != "Cancel" or not DocStatus(item.docstatus).is_submitted()):
+				# don't raise exception if not
+				# linked to a non-cancelled doc when deleting or to a submitted doc when cancelling
+				continue
+			elif link_dt == doc.doctype and (item_parent or item.name) == doc.name:
+				# don't raise exception if not
+				# linked to same item or doc having same name as the item
+				continue
+			else:
+				reference_docname = item_parent or item.name
+				frappe.delete_doc(linked_parent_doctype, reference_docname, force=True, ignore_missing=True)
+
+
+def delete_dynamically_linked_docs(doc, method="Delete"):
+	for df in get_dynamic_link_map().get(doc.doctype, []):
+		ignore_linked_doctypes = doc.get("ignore_linked_doctypes") or []
+
+		if df.parent in frappe.get_hooks("ignore_links_on_delete") or (
+			df.parent in ignore_linked_doctypes and method == "Cancel"
+		):
+			# don't check for communication and todo!
+			continue
+
+		meta = frappe.get_meta(df.parent)
+		if meta.issingle:
+			# dynamic link in single doc
+			refdoc = frappe.db.get_singles_dict(df.parent)
+			if (
+				refdoc.get(df.options) == doc.doctype
+				and refdoc.get(df.fieldname) == doc.name
+				and (
+					# linked to an non-cancelled doc when deleting
+					(method == "Delete" and not DocStatus(refdoc.docstatus).is_cancelled())
+					# linked to a submitted doc when cancelling
+					or (method == "Cancel" and DocStatus(refdoc.docstatus).is_submitted())
+				)
+			):
+				raise_link_exists_exception(doc, df.parent, df.parent)
+		else:
+			# dynamic link in table
+			df["table"] = ", `parent`, `parenttype`, `idx`" if meta.istable else ""
+			for refdoc in frappe.db.sql(
+				"""select `name`, `docstatus` {table} from `tab{parent}` where
+				`{options}`=%s and `{fieldname}`=%s""".format(**df),
+				(doc.doctype, doc.name),
+				as_dict=True,
+			):
+				# linked to an non-cancelled doc when deleting
+				# or linked to a submitted doc when cancelling
+				if (method == "Delete" and not DocStatus(refdoc.docstatus).is_cancelled()) or (
+					method == "Cancel" and DocStatus(refdoc.docstatus).is_submitted()
+				):
+					reference_doctype = refdoc.parenttype if meta.istable else df.parent
+					reference_docname = refdoc.parent if meta.istable else refdoc.name
+
+					if reference_doctype in frappe.get_hooks("ignore_links_on_delete") or (
+						reference_doctype in ignore_linked_doctypes and method == "Cancel"
+					):
+						# don't check for communication and todo!
+						continue
+
+					frappe.delete_doc(reference_doctype, reference_docname, force=True, ignore_missing=True)
+
+
+def raise_link_exists_exception(doc, reference_doctype, reference_docname, row=""):
+	doc_link = f'<a href="/app/Form/{doc.doctype}/{doc.name}">{doc.name}</a>'
+	reference_link = f'<a href="/app/Form/{reference_doctype}/{reference_docname}">{reference_docname}</a>'
+
+	# hack to display Single doctype only once in message
+	if reference_doctype == reference_docname:
+		reference_doctype = ""
+
+	frappe.throw(
+		_("Cannot delete or cancel because {0} {1} is linked with {2} {3} {4}").format(
+			_(doc.doctype), doc_link, _(reference_doctype), reference_link, row
+		),
+		frappe.LinkExistsError,
+	)
