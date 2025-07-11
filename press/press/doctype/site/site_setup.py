@@ -2,6 +2,8 @@ import os
 import json
 import paramiko
 from datetime import datetime, timedelta
+import boto3
+from urllib.parse import urlparse, unquote
 
 import frappe
 from frappe.utils import now_datetime as now
@@ -339,27 +341,40 @@ class SiteSetup:
         public_files_backup = backup_doc.public_url
         private_files_backup = backup_doc.private_url
 
+        backup_files = []
+
         if db_backup:
             commands.append(f'cd {self.frappe_bench_dir} && wget {db_backup}')
             self.db_backup_path = db_backup.split("/")[-1]
+            backup_files.append(db_backup)
 
         if config_file_backup:
             commands.append(f'cd {self.frappe_bench_dir} && wget {config_file_backup}')
-            config_path = config_file_backup.split("/")[-1]
+            self.config_path = config_file_backup.split("/")[-1]
+            backup_files.append(config_file_backup)
         
         if public_files_backup:
             commands.append(f'cd {self.frappe_bench_dir} && wget {public_files_backup}')
             self.public_path = public_files_backup.split("/")[-1]
+            backup_files.append(public_files_backup)
 
         if private_files_backup:
             commands.append(f'cd {self.frappe_bench_dir} && wget {private_files_backup}')
             self.private_path = private_files_backup.split("/")[-1]
+            backup_files.append(private_files_backup)
 
         list_files = f'source ~/.profile && (cd {self.frappe_bench_dir} && ls -lh)'
         commands.append(list_files)
+
+        s3 = setup_s3_client()
+        for file_url in backup_files:
+            change_file_permissions(s3, file_url, "public-read")
         
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Download Backup", start_time, output, traceback)
+
+        for file_url in backup_files:
+            change_file_permissions(s3, file_url, "private")
 
     def create_site(self):
         start_time = now()
@@ -517,3 +532,30 @@ def get_ssh_key():
     file_path = os.path.join(frappe.utils.get_site_path(), ssh_key.lstrip("/"))
 
     return file_path
+
+
+def setup_s3_client():
+    backup_settings = frappe.get_single("Press Settings")
+    access_key = backup_settings.offsite_backups_access_key_id
+    secret_key = backup_settings.get_password("offsite_backups_secret_access_key")
+
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+    )
+    
+    return s3
+
+
+def change_file_permissions(s3, object_url, object_acl):
+    parsed_url = urlparse(object_url)
+
+    domain_parts = parsed_url.netloc.split('.')
+    if "s3" not in domain_parts:
+        raise ValueError("URL is not a standard S3 URL.")
+
+    bucket_name = domain_parts[0]
+    object_key = unquote(parsed_url.path.lstrip('/'))
+
+    s3.put_object_acl(Bucket=bucket_name, Key=object_key, ACL=object_acl)
