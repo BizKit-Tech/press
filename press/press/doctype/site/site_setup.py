@@ -59,9 +59,9 @@ class SiteSetup:
             self.enable_automatic_bench_start()
             self.setup_production()
             self.download_backup()
+            self.get_additional_apps()
             self.create_site()
             self.restore_files()
-            self.install_additional_apps()
             self.set_developer_mode()
             self.restart_bench()
             self.remove_fail2ban()
@@ -132,6 +132,12 @@ class SiteSetup:
                     "parent": "Site Setup",
                     "parentfield": "steps",
                     "parenttype": "Agent Job Type",
+                    "step_name": "Get Additional Apps"
+                },
+                {
+                    "parent": "Site Setup",
+                    "parentfield": "steps",
+                    "parenttype": "Agent Job Type",
                     "step_name": "Create Site"
                 },
                 {
@@ -139,12 +145,6 @@ class SiteSetup:
                     "parentfield": "steps",
                     "parenttype": "Agent Job Type",
                     "step_name": "Restore Files"
-                },
-                {
-                    "parent": "Site Setup",
-                    "parentfield": "steps",
-                    "parenttype": "Agent Job Type",
-                    "step_name": "Install Additional Apps"
                 },
                 {
                     "parent": "Site Setup",
@@ -376,6 +376,32 @@ class SiteSetup:
         for file_url in backup_files:
             change_file_permissions(s3, file_url, "private")
 
+    def get_additional_apps(self):
+        start_time = now()
+        
+        press_settings = frappe.get_single("Press Settings")
+        default_apps = press_settings.get_default_apps() or DEFAULT_APPS
+        site_apps = frappe.get_all("Site App", filters={"parent": self.site.name}, pluck="app")
+        apps = list(set(site_apps) - set(default_apps))
+        self.additional_apps = apps
+        if not apps:
+            self.update_agent_job_step("Get Additional Apps", start_time, skipped=True)
+            return
+        
+        commands = ['echo "Getting additional apps..."']
+
+        for app in apps:
+            repo_url, branch = frappe.db.get_value("App Source", {"app": app, "enabled": 1}, ["ssh_url", "branch"])
+            prereq_script = frappe.db.get_value("App", app, "installation_script_bash")
+            if prereq_script:
+                prereq_script_command = f"source ~/.profile && bash <<EOF\n{prereq_script}\nEOF"
+                commands.append(prereq_script_command)
+
+            commands.append(f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} get-app {repo_url} --branch {branch})')
+        
+        output, traceback = self.execute_commands(commands)
+        self.update_agent_job_step("Get Additional Apps", start_time, output, traceback)
+
     def create_site(self):
         start_time = now()
         admin_password = self.site.get_password("admin_password")
@@ -388,9 +414,7 @@ class SiteSetup:
                 f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} set-admin-password {admin_password})',
                 'echo "Installing apps..."',
                 f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app erpnext)',
-                f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app bizkit_core)',
-                'echo "Running patches and build..."',
-                f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} update --patch --build --no-backup)'
+                f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app bizkit_core)'
             ]
         else:
             commands = [
@@ -400,9 +424,15 @@ class SiteSetup:
                 f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app erpnext --run-patches)',
                 f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app bizkit_core --run-patches)',
                 'echo "Running patches and build..."',
-                f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} migrate --skip-failing) # Workaround: migrate and skip failing patches before running update to build prereqs first',
-                f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} update --patch --build --no-backup)'
+                f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} migrate --skip-failing) # Workaround: migrate and skip failing patches before running update to build prereqs first'
             ]
+
+        if self.additional_apps:
+            commands.append('echo "Installing additional apps..."')
+            for app in self.additional_apps:
+                commands.append(f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} --site {self.server_abbr} install-app {app})')
+
+        commands.append(f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} update --patch --build --no-backup)')
 
         if self.environment == "Production":
             commands.append(f'source ~/.profile && (cd {self.frappe_bench_dir} && sudo {self.bench_path} setup production ubuntu --yes)')
@@ -429,39 +459,6 @@ class SiteSetup:
 
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Restore Files", start_time, output, traceback)
-
-    def install_additional_apps(self):
-        start_time = now()
-        
-        press_settings = frappe.get_single("Press Settings")
-        default_apps = press_settings.get_default_apps() or DEFAULT_APPS
-        site_apps = frappe.get_all("Site App", filters={"parent": self.site.name}, pluck="app")
-        apps = list(set(site_apps) - set(default_apps))
-        if not apps:
-            self.update_agent_job_step("Install Additional Apps", start_time, skipped=True)
-            return
-        
-        commands = ['echo "Installing additional apps..."']
-
-        main_command = 'source ~/.profile && (cd {frappe_bench_dir} && {command})'
-        for app in apps:
-            repo_url, branch = frappe.db.get_value("App Source", {"app": app, "enabled": 1}, ["ssh_url", "branch"])
-            prereq_script = frappe.db.get_value("App", app, "installation_script_bash")
-            if prereq_script:
-                prereq_script_command = f"source ~/.profile && bash <<EOF\n{prereq_script}\nEOF"
-                commands.append(prereq_script_command)
-
-            get_app_command = f"{self.bench_path} get-app {repo_url} --branch {branch}"
-            install_command = f"{self.bench_path} --site {self.server_abbr} install-app {app}"
-
-            formatted_get_app_command = main_command.format(frappe_bench_dir=self.frappe_bench_dir, command=get_app_command)
-            formatted_install_command = main_command.format(frappe_bench_dir=self.frappe_bench_dir, command=install_command)
-
-            commands.append(formatted_get_app_command)
-            commands.append(formatted_install_command)
-        
-        output, traceback = self.execute_commands(commands)
-        self.update_agent_job_step("Install Additional Apps", start_time, output, traceback)
 
     def set_developer_mode(self):
         start_time = now()
