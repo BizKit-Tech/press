@@ -140,7 +140,7 @@ class SiteBackup(Document):
 		except Exception as e:
 			self.fail = True
 			self.client = 0
-			print("Site Backup Error: Failed to connect to server", data=e)
+			log_error("Site Backup Error: Failed to connect to server", data=e)
 
 	def close_remote_connection(self):
 		if self.client:
@@ -173,7 +173,7 @@ class SiteBackup(Document):
 		frappe_bench_dir = "/home/ubuntu/frappe-bench"
 		bench_path = "/home/ubuntu/.local/bin/bench"
 
-		with_files = "--with-files" if self.with_files else ""
+		with_files = "--with-files --compress" if self.with_files else ""
 
 		commands = [
 			f'source ~/.profile && (cd {frappe_bench_dir} && {bench_path} backup {with_files})',
