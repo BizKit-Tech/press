@@ -2614,6 +2614,7 @@ class Site(Document, TagHelpers):
 		server = frappe.get_doc("Server", self.server)
 		server_state = server.instance_state
 		termination_protection = server.termination_protection
+		environment = server.environment
 
 		actions = [
 			{
@@ -2643,7 +2644,7 @@ class Site(Document, TagHelpers):
 				"description": "Termination protection prevents accidental deletion of your site. To delete your site, you must disable termination protection first",
 				"button_label": "Disable",
 				"doc_method": "disable_termination_protection",
-				"condition": termination_protection == "Enabled",
+				"condition": termination_protection == "Enabled" and environment != "Production",
 			},
 			{
 				"group": "Dangerous Actions",
@@ -2659,7 +2660,7 @@ class Site(Document, TagHelpers):
 				"description": "When you drop your site, all site data is deleted forever",
 				"button_label": "Drop",
 				"doc_method": "drop_site",
-				"condition": termination_protection == "Disabled",
+				"condition": termination_protection == "Disabled" and environment != "Production",
 			},
 		]
 
