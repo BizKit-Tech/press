@@ -240,6 +240,7 @@
 					</button>
 					<button
 						@click="tenancy = 'Shared'"
+						:disabled="environment !== 'Demo'"
 						:class="[
 							tenancy === 'Shared'
 								? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
@@ -288,6 +289,7 @@
 							v-for="c in selectedVersion.group.clusters"
 							:key="c.name"
 							@click="cluster = c.name"
+							:disabled="c.name === 'Default'"
 							:class="[
 								cluster === c.name
 									? 'border-gray-900 ring-1 ring-gray-900 hover:bg-gray-100'
@@ -369,6 +371,7 @@
 						:selectedApps="apps"
 						:selectedVersion="version"
 						:hideRestrictedPlans="selectedLocalisationCountry"
+						:selectedEnvironment="environment"
 					/>
 				</div>
 				<div class="mt-4 text-xs text-gray-700">

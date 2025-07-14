@@ -72,6 +72,9 @@ def _new(args):
         })
 
     except Exception as e:
+        if is_new_client(cluster):
+            cluster = project_name
+
         create_notification({
             "team": team,
             "doctype": "Cluster",

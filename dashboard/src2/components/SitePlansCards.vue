@@ -15,7 +15,8 @@ export default {
 		'selectedCluster',
 		'selectedApps',
 		'selectedVersion',
-		'hideRestrictedPlans'
+		'hideRestrictedPlans',
+		'selectedEnvironment'
 	],
 	emits: ['update:modelValue'],
 	components: {
@@ -82,6 +83,20 @@ export default {
 			if (this.hideRestrictedPlans) {
 				plans = plans.filter(plan => !plan.restricted_plan);
 			}
+			if (this.selectedEnvironment == 'Development') {
+				plans = plans.filter(plan => plan.cpu_time_per_day < 24);
+			} else {
+				plans = plans.filter(plan => plan.cpu_time_per_day == 24);
+			}
+			if (this.selectedCluster == 'New Client' && this.selectedEnvironment !== 'Demo') {
+				plans = plans.filter(plan => plan.max_database_usage > 0);
+			}
+			else {
+				plans = plans.filter(plan => plan.max_database_usage == 0);
+				if (this.selectedEnvironment == 'Demo') {
+					plans = plans.filter(plan => plan.vcpu == 2 && plan.memory == 1024);
+				}
+			}
 
 			return plans.map(plan => {
 				return {
@@ -97,14 +112,19 @@ export default {
 							value: plan.cpu_time_per_day
 						},
 						{
-							label: 'Database',
+							label: 'Processing',
 							condition: !plan.name.includes('Unlimited'),
-							value: this.$format.bytes(plan.max_database_usage, 0, 2)
+							value: `${plan.vcpu} vCPUs`
 						},
 						{
-							label: 'Disk',
+							label: 'Memory',
 							condition: !plan.name.includes('Unlimited'),
-							value: this.$format.bytes(plan.max_storage_usage, 1, 2)
+							value: this.$format.bytes(plan.memory, 0, 2)
+						},
+						{
+							label: 'Storage',
+							condition: !plan.name.includes('Unlimited'),
+							value: `${this.$format.bytes(plan.max_storage_usage + plan.max_database_usage, 0, 2)} SSD`
 						},
 						{
 							value: plan.support_included ? 'Product Warranty' : ''
