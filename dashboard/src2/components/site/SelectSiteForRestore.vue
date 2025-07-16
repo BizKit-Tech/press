@@ -19,7 +19,7 @@
 	>
 		<template #body-content>
 			<FormControl
-				label="Select the site where you want to restore the backup"
+				label="Select the site where you want to restore the backup. Note: Restores are restricted to development sites to avoid affecting production data."
 				class="mt-4"
 				type="autocomplete"
 				v-model="selectedSite"
@@ -64,7 +64,7 @@ export default {
 				type: 'list',
 				doctype: 'Site',
 				fields: ['host_name', 'name'],
-				filters: { name: ['!=', this.site] },
+				filters: { name: ['!=', this.site], domain: ['!=', 'prod'] },
 				pageLength: 500,
 				auto: true
 			};

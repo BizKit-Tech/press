@@ -90,6 +90,7 @@ from press.utils import (
 )
 from press.utils.dns import _change_dns_record, create_dns_record
 from press.press.doctype.site.site_setup import SiteSetup
+from press.press.doctype.site.backup_restore import BackupRestore
 
 if TYPE_CHECKING:
 	from datetime import datetime
@@ -207,6 +208,7 @@ class Site(Document, TagHelpers):
 		"host_name",
 		"skip_auto_updates",
 		"additional_system_user_created",
+		"domain",
 	)
 
 	@staticmethod
@@ -924,15 +926,14 @@ class Site(Document, TagHelpers):
 	@dashboard_whitelist()
 	@site_action(["Active", "Broken"])
 	def restore_site(self, skip_failing_patches=False):
-		if not frappe.get_doc("Remote File", self.remote_database_file).exists():
-			raise Exception(f"Remote File {self.remote_database_file} is unavailable on S3")
-
-		agent = Agent(self.server)
-		job = agent.restore_site(self, skip_failing_patches=skip_failing_patches)
-		log_site_activity(self.name, "Restore", job=job.name)
+		frappe.enqueue(self._restore_site, queue="long", job_name=f"restore_site_{self.name}", timeout=3600, at_front=True)
 		self.status = "Pending"
 		self.save()
-		return job.name
+		return self.name
+
+	def _restore_site(self):
+		backup_job = BackupRestore(self)
+		backup_job.execute()
 
 	@dashboard_whitelist()
 	@site_action(["Active", "Broken"])

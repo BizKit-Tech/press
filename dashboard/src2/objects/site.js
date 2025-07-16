@@ -774,7 +774,6 @@ export default {
 									},
 									{
 										label: 'Restore Backup on another Site',
-										condition: () => false, // Disable this action until restoring to another site is supported
 										onClick() {
 											let SelectSiteForRestore = defineAsyncComponent(() =>
 												import('../components/site/SelectSiteForRestore.vue')
@@ -790,19 +789,14 @@ export default {
 														return toast.promise(
 															restoreSite.submit({
 																name: siteName,
-																files: {
-																	database: row.remote_database_file,
-																	public: row.remote_public_file,
-																	private: row.remote_private_file,
-																	config: row.remote_config_file
-																}
+																backup: row.name
 															}),
 															{
 																loading: 'Scheduling backup restore...',
-																success: jobId => {
+																success: r => {
 																	router.push({
-																		name: 'Site Job',
-																		params: { name: siteName, id: jobId }
+																		name: 'Site Jobs',
+																		params: { name: siteName }
 																	});
 																	return 'Backup restore scheduled successfully.';
 																},
@@ -848,10 +842,6 @@ export default {
 												loading: 'Scheduling backup...',
 												success: () => {
 													hide();
-													router.push({
-														name: 'Site Jobs',
-														params: { name: site.name }
-													});
 													return 'Backup scheduled successfully.';
 												},
 												error: e => getToastErrorMessage(e)
