@@ -184,7 +184,8 @@ class Site(Document, TagHelpers):
 		update_end_of_month: DF.Check
 		update_on_day_of_month: DF.Int
 		update_on_weekday: DF.Literal["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-		update_trigger_frequency: DF.Literal["Daily", "Weekly", "Monthly"]
+		update_start_date: DF.Date | None
+		update_trigger_frequency: DF.Literal["Daily", "Weekly", "Every 2 Weeks", "Monthly"]
 		update_trigger_time: DF.Time | None
 	# end: auto-generated types
 
@@ -210,6 +211,7 @@ class Site(Document, TagHelpers):
 		"skip_auto_updates",
 		"update_trigger_frequency",
 		"update_on_weekday",
+		"update_start_date",
 		"update_trigger_time",
 		"additional_system_user_created",
 		"domain",

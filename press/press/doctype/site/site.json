@@ -68,6 +68,7 @@
   "update_trigger_frequency",
   "update_trigger_time",
   "column_break_57",
+  "update_start_date",
   "update_on_weekday",
   "update_end_of_month",
   "update_on_day_of_month",
@@ -406,11 +407,11 @@
    "fieldname": "update_trigger_frequency",
    "fieldtype": "Select",
    "label": "Update Trigger Frequency",
-   "options": "Daily\nWeekly\nMonthly"
+   "options": "Daily\nWeekly\nEvery 2 Weeks\nMonthly"
   },
   {
    "default": "Sunday",
-   "depends_on": "eval:doc.update_trigger_frequency === 'Weekly'",
+   "depends_on": "eval:['Weekly', 'Every 2 Weeks'].includes(doc.update_trigger_frequency)",
    "fieldname": "update_on_weekday",
    "fieldtype": "Select",
    "label": "Update on Weekday",
@@ -640,6 +641,12 @@
    "label": "Restored From Backup",
    "options": "Site Backup",
    "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.update_trigger_frequency === 'Every 2 Weeks'",
+   "fieldname": "update_start_date",
+   "fieldtype": "Date",
+   "label": "Update Start Date"
   }
  ],
  "links": [
@@ -714,7 +721,7 @@
    "link_fieldname": "site"
   }
  ],
- "modified": "2025-05-22 17:50:38.558835",
+ "modified": "2025-08-04 13:35:14.203653",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Site",

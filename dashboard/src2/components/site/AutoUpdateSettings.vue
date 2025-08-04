@@ -60,6 +60,7 @@
 					{ 
 						skip_auto_updates: !enableUpdates,
 						update_trigger_frequency: updateFrequency,
+						update_start_date: updateStartDate,
 						update_on_weekday: updateDay,
 						update_trigger_time: updateTriggerTime
 					},
@@ -116,6 +117,7 @@ const siteValues = computed(() => {
 	return {
 		enableUpdates: !siteResource.doc.skip_auto_updates,
 		updateFrequency: siteResource.doc.update_trigger_frequency,
+		updateStartDate: siteResource.doc.update_start_date,
 		updateDay: siteResource.doc.update_on_weekday,
 		updateTriggerTime: siteResource.doc.update_trigger_time
 	};
@@ -123,7 +125,7 @@ const siteValues = computed(() => {
 
 const enableUpdates = ref(siteValues.value?.enableUpdates);
 const updateFrequency = ref(siteValues.value?.updateFrequency);
-const updateStartDate = ref(null);
+const updateStartDate = ref(siteValues.value?.updateStartDate);
 const updateDay = ref(siteValues.value?.updateDay);
 const updateTriggerTime = ref(siteValues.value?.updateTriggerTime);
 
