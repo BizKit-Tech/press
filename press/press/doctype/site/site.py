@@ -91,6 +91,7 @@ from press.utils import (
 from press.utils.dns import _change_dns_record, create_dns_record
 from press.press.doctype.site.site_setup import SiteSetup
 from press.press.doctype.site.backup_restore import BackupRestore
+from press.press.doctype.site.bizkit_site_update import SiteUpdate
 
 if TYPE_CHECKING:
 	from datetime import datetime
@@ -207,6 +208,9 @@ class Site(Document, TagHelpers):
 		"server",
 		"host_name",
 		"skip_auto_updates",
+		"update_trigger_frequency",
+		"update_on_weekday",
+		"update_trigger_time",
 		"additional_system_user_created",
 		"domain",
 	)
@@ -426,10 +430,6 @@ class Site(Document, TagHelpers):
 		# Validate day of month
 		if not (1 <= self.update_on_day_of_month <= 31):
 			frappe.throw("Day of the month must be between 1 and 31 (included)!")
-		# If site is on public bench, don't allow to disable auto updates
-		is_group_public = frappe.get_cached_value("Release Group", self.group, "public")
-		if self.skip_auto_updates and is_group_public:
-			frappe.throw("Auto updates can't be disabled for sites on public benches!")
 
 	def validate_site_plan(self):
 		if hasattr(self, "subscription_plan") and self.subscription_plan:
@@ -534,6 +534,9 @@ class Site(Document, TagHelpers):
 
 		if self.has_value_changed("status"):
 			create_site_status_update_webhook_event(self.name)
+		
+		if self.has_value_changed("skip_auto_updates"):
+			self.set_automatic_updates_in_site()
 
 	def generate_saas_communication_secret(self, create_agent_job=False, save=True):
 		if not self.standby_for and not self.standby_for_product:
@@ -3001,6 +3004,23 @@ class Site(Document, TagHelpers):
 		site = SiteSetup(self)
 		site.execute()
 
+	@dashboard_whitelist()
+	def update_site(self):
+		frappe.enqueue(
+			self._update_site,
+			queue="long",
+			job_name=f"update_site_{self.name}",
+			timeout=3600,
+		)
+		self.save()
+
+	def _update_site(self):
+		site_update = SiteUpdate(self)
+		site_update.execute()
+
+	def set_automatic_updates_in_site(self):
+		site_update = SiteUpdate(self)
+		site_update.set_automatic_updates_in_site(cint(not self.skip_auto_updates))
 
 def site_cleanup_after_archive(site):
 	delete_site_domains(site)
