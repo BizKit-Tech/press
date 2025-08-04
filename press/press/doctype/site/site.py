@@ -1822,7 +1822,7 @@ class Site(Document, TagHelpers):
 			self._update_configuration(config)
 		return Agent(self.server).update_site_config(self)
 
-	def update_site(self):
+	def update_site_activity(self):
 		log_site_activity(self.name, "Update")
 
 	def create_subscription(self, plan):
@@ -3872,3 +3872,61 @@ def raise_link_exists_exception(doc, reference_doctype, reference_docname, row="
 		),
 		frappe.LinkExistsError,
 	)
+
+
+def auto_update_all_sites():
+	sites = frappe.get_all(
+		"Site",
+		filters={
+			"status": "Active",
+			"skip_auto_updates": 0,
+			"environment": "Production",
+		},
+		pluck="name",
+	)
+
+	for site in sites:
+		try:
+			check_auto_update_schedule(site)
+		except Exception as e:
+			frappe.log_error(
+				f"Error while checking auto update schedule for site {site}: {str(e)}",
+				title="Auto Update Check Error",
+			)
+
+
+def check_auto_update_schedule(site):
+	"""Check if auto update is scheduled and run if required"""
+
+	site = frappe.get_doc("Site", site)
+
+	if site.environment != "Production" or not site.skip_auto_updates:
+		return
+
+	frequency = site.update_trigger_frequency
+	day_to_update = site.update_on_weekday
+	time_to_update = site.update_trigger_time
+	start_date = site.update_start_date
+
+	cur_datetime = now_datetime()
+	cur_time = cur_datetime.strftime("%H:%M:%S.%f")
+	cur_day_of_week = get_weekday(cur_datetime)
+	day_diff = date_diff(get_date_str(cur_datetime), start_date)
+	time_diff = time_diff_in_seconds(cur_time, time_to_update)
+
+	update = False
+
+	if time_diff >= 0 and time_diff <= 300:
+		if (
+			frequency == "Every 2 Weeks"
+			and cur_day_of_week == day_to_update
+			and day_diff % 14 == 0
+		):
+			update = True
+		if frequency == "Weekly" and cur_day_of_week == day_to_update:
+			update = True
+		elif frequency == "Daily":
+			update = True
+
+	if update:
+		site.update_site()
