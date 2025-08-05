@@ -33,6 +33,10 @@ from frappe.utils import (
 	now_datetime,
 	sbool,
 	time_diff_in_hours,
+	get_weekday,
+	date_diff,
+	get_date_str,
+	time_diff_in_seconds
 )
 from frappe.model.rename_doc import get_link_fields
 from frappe.model.docstatus import DocStatus
@@ -91,6 +95,7 @@ from press.utils import (
 from press.utils.dns import _change_dns_record, create_dns_record
 from press.press.doctype.site.site_setup import SiteSetup
 from press.press.doctype.site.backup_restore import BackupRestore
+from press.press.doctype.site.bizkit_site_update import SiteUpdate
 
 if TYPE_CHECKING:
 	from datetime import datetime
@@ -183,7 +188,8 @@ class Site(Document, TagHelpers):
 		update_end_of_month: DF.Check
 		update_on_day_of_month: DF.Int
 		update_on_weekday: DF.Literal["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-		update_trigger_frequency: DF.Literal["Daily", "Weekly", "Monthly"]
+		update_start_date: DF.Date | None
+		update_trigger_frequency: DF.Literal["Daily", "Weekly", "Every 2 Weeks", "Monthly"]
 		update_trigger_time: DF.Time | None
 	# end: auto-generated types
 
@@ -207,6 +213,10 @@ class Site(Document, TagHelpers):
 		"server",
 		"host_name",
 		"skip_auto_updates",
+		"update_trigger_frequency",
+		"update_on_weekday",
+		"update_start_date",
+		"update_trigger_time",
 		"additional_system_user_created",
 		"domain",
 	)
@@ -426,10 +436,6 @@ class Site(Document, TagHelpers):
 		# Validate day of month
 		if not (1 <= self.update_on_day_of_month <= 31):
 			frappe.throw("Day of the month must be between 1 and 31 (included)!")
-		# If site is on public bench, don't allow to disable auto updates
-		is_group_public = frappe.get_cached_value("Release Group", self.group, "public")
-		if self.skip_auto_updates and is_group_public:
-			frappe.throw("Auto updates can't be disabled for sites on public benches!")
 
 	def validate_site_plan(self):
 		if hasattr(self, "subscription_plan") and self.subscription_plan:
@@ -534,6 +540,9 @@ class Site(Document, TagHelpers):
 
 		if self.has_value_changed("status"):
 			create_site_status_update_webhook_event(self.name)
+		
+		if self.has_value_changed("skip_auto_updates"):
+			self.set_automatic_updates_in_site()
 
 	def generate_saas_communication_secret(self, create_agent_job=False, save=True):
 		if not self.standby_for and not self.standby_for_product:
@@ -1817,7 +1826,7 @@ class Site(Document, TagHelpers):
 			self._update_configuration(config)
 		return Agent(self.server).update_site_config(self)
 
-	def update_site(self):
+	def update_site_activity(self):
 		log_site_activity(self.name, "Update")
 
 	def create_subscription(self, plan):
@@ -3001,6 +3010,25 @@ class Site(Document, TagHelpers):
 		site = SiteSetup(self)
 		site.execute()
 
+	@dashboard_whitelist()
+	def update_site(self):
+		frappe.enqueue(
+			self._update_site,
+			queue="long",
+			job_name=f"update_site_{self.name}",
+			timeout=3600,
+		)
+		self.status = "Updating"
+		self.auto_update_last_triggered_on = now_datetime()
+		self.save()
+
+	def _update_site(self):
+		site_update = SiteUpdate(self)
+		site_update.execute()
+
+	def set_automatic_updates_in_site(self):
+		site_update = SiteUpdate(self)
+		site_update.set_automatic_updates_in_site(cint(not self.skip_auto_updates))
 
 def site_cleanup_after_archive(site):
 	delete_site_domains(site)
@@ -3850,3 +3878,61 @@ def raise_link_exists_exception(doc, reference_doctype, reference_docname, row="
 		),
 		frappe.LinkExistsError,
 	)
+
+
+def auto_update_all_sites():
+	sites = frappe.get_all(
+		"Site",
+		filters={
+			"status": "Active",
+			"domain": "prod",
+			"skip_auto_updates": 0,
+		},
+		pluck="name",
+	)
+
+	for site in sites:
+		try:
+			check_auto_update_schedule(site)
+		except Exception as e:
+			log_error(
+				title="Auto Update Check Error",
+				site=site
+			)
+
+
+def check_auto_update_schedule(site_name):
+	"""Check if auto update is scheduled and run if required"""
+
+	site = frappe.get_doc("Site", site_name)
+
+	if site.domain != "prod" or site.skip_auto_updates:
+		return
+
+	frequency = site.update_trigger_frequency
+	day_to_update = site.update_on_weekday
+	time_to_update = site.update_trigger_time
+	start_date = site.update_start_date
+
+	cur_datetime = now_datetime()
+	cur_time = cur_datetime.strftime("%H:%M:%S.%f")
+	cur_day_of_week = get_weekday(cur_datetime)
+	day_diff = date_diff(get_date_str(cur_datetime), start_date)
+	time_diff = time_diff_in_seconds(cur_time, str(time_to_update))
+
+	update = False
+
+	if time_diff >= 0 and time_diff <= 300:
+		if (
+			frequency == "Every 2 Weeks"
+			and cur_day_of_week == day_to_update
+			and day_diff % 14 == 0
+		):
+			update = True
+		if frequency == "Weekly" and cur_day_of_week == day_to_update:
+			update = True
+		elif frequency == "Daily":
+			update = True
+
+	if update:
+		site.update_site()
