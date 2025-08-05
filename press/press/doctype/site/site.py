@@ -33,6 +33,10 @@ from frappe.utils import (
 	now_datetime,
 	sbool,
 	time_diff_in_hours,
+	get_weekday,
+	date_diff,
+	get_date_str,
+	time_diff_in_seconds
 )
 from frappe.model.rename_doc import get_link_fields
 from frappe.model.docstatus import DocStatus
@@ -3014,6 +3018,8 @@ class Site(Document, TagHelpers):
 			job_name=f"update_site_{self.name}",
 			timeout=3600,
 		)
+		self.status = "Updating"
+		self.auto_update_last_triggered_on = now_datetime()
 		self.save()
 
 	def _update_site(self):
@@ -3879,8 +3885,8 @@ def auto_update_all_sites():
 		"Site",
 		filters={
 			"status": "Active",
+			"domain": "prod",
 			"skip_auto_updates": 0,
-			"environment": "Production",
 		},
 		pluck="name",
 	)
@@ -3889,18 +3895,18 @@ def auto_update_all_sites():
 		try:
 			check_auto_update_schedule(site)
 		except Exception as e:
-			frappe.log_error(
-				f"Error while checking auto update schedule for site {site}: {str(e)}",
+			log_error(
 				title="Auto Update Check Error",
+				site=site
 			)
 
 
-def check_auto_update_schedule(site):
+def check_auto_update_schedule(site_name):
 	"""Check if auto update is scheduled and run if required"""
 
-	site = frappe.get_doc("Site", site)
+	site = frappe.get_doc("Site", site_name)
 
-	if site.environment != "Production" or not site.skip_auto_updates:
+	if site.domain != "prod" or site.skip_auto_updates:
 		return
 
 	frequency = site.update_trigger_frequency
@@ -3912,7 +3918,7 @@ def check_auto_update_schedule(site):
 	cur_time = cur_datetime.strftime("%H:%M:%S.%f")
 	cur_day_of_week = get_weekday(cur_datetime)
 	day_diff = date_diff(get_date_str(cur_datetime), start_date)
-	time_diff = time_diff_in_seconds(cur_time, time_to_update)
+	time_diff = time_diff_in_seconds(cur_time, str(time_to_update))
 
 	update = False
 

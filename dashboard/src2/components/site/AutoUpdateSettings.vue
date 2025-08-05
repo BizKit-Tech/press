@@ -9,7 +9,7 @@
 				@click="isDirty = true"
 			/>
 			<FormControl
-				v-if="enableUpdates"
+				v-if="enableUpdates && domain === 'prod'"
 				label="Update Trigger Frequency"
 				type="select"
 				v-model="updateFrequency"
@@ -22,7 +22,7 @@
 				@change="isDirty = true"
 			/>
 			<FormControl
-				v-if="enableUpdates && updateFrequency === 'Every 2 Weeks'"
+				v-if="enableUpdates && domain === 'prod' && updateFrequency === 'Every 2 Weeks'"
 				label="Update Start Date"
 				type="date"
 				v-model="updateStartDate"
@@ -30,7 +30,7 @@
 				@change="isDirty = true"
 			/>
 			<FormControl
-				v-if="enableUpdates && updateFrequency !== 'Daily'"
+				v-if="enableUpdates && domain === 'prod' && updateFrequency !== 'Daily'"
 				label="Update Trigger Day"
 				type="select"
 				v-model="updateDay"
@@ -44,7 +44,7 @@
 				@change="isDirty = true"
 			/>
 			<FormControl
-				v-if="enableUpdates"
+				v-if="enableUpdates && domain === 'prod'"
 				label="Update Trigger Time"
 				type="time"
 				v-model="updateTriggerTime"
@@ -119,7 +119,8 @@ const siteValues = computed(() => {
 		updateFrequency: siteResource.doc.update_trigger_frequency,
 		updateStartDate: siteResource.doc.update_start_date,
 		updateDay: siteResource.doc.update_on_weekday,
-		updateTriggerTime: siteResource.doc.update_trigger_time
+		updateTriggerTime: siteResource.doc.update_trigger_time,
+		domain: siteResource.doc.domain
 	};
 });
 
@@ -128,6 +129,7 @@ const updateFrequency = ref(siteValues.value?.updateFrequency);
 const updateStartDate = ref(siteValues.value?.updateStartDate);
 const updateDay = ref(siteValues.value?.updateDay);
 const updateTriggerTime = ref(siteValues.value?.updateTriggerTime);
+const domain = ref(siteValues.value?.domain);
 
 const logsResource = createResource({
 	url: 'press.api.client.get_list',
@@ -189,7 +191,7 @@ const logsOptions = computed(() => ({
 				confirmDialog({
 					title: 'Get Updates',
 					message:
-						'Are you sure you want to update the site? This will apply the latest changes and may take some time.',
+						'This will immediately apply the latest changes and may take some time. Are you sure you want to update the site?',
 					onSuccess({ hide }) {
 						toast.promise(
 							siteResource.updateSite.submit(),

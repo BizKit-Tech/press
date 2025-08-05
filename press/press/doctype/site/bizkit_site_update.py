@@ -61,7 +61,6 @@ class SiteUpdate:
             self.site.status = "Broken"
         else:
             self.site.status = "Active"
-            self.site.setup_wizard_complete = 1
         self.site.save()
         frappe.db.commit()
 
