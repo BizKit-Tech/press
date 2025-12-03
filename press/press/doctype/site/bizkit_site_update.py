@@ -205,9 +205,15 @@ class SiteUpdate:
 
     def pull_changes(self):
         start_time = now()
-        commands = [
-            f"cd {self.frappe_bench_dir} && {self.bench_path} update --pull --no-backup",
+
+        list_apps_command = [
+            f"cd {self.frappe_bench_dir} && ls apps"
         ]
+        app_list = self.execute_commands(list_apps_command)[0]["message"].strip().split("\n")
+        commands = []
+        for app in app_list:
+            commands.append(f"cd {self.frappe_bench_dir}/apps/{app} && git pull")
+
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Pull Changes", start_time, output, traceback)
 
