@@ -160,6 +160,12 @@ frappe.ui.form.on('Database Server', {
 				true,
 				frm.doc.virtual_machine && frm.doc.mounts,
 			],
+			[
+				__('Show Root Password'),
+				'show_root_password',
+				true,
+				frappe.user.has_role('System Manager') && frm.doc.is_server_setup,
+			]
 		].forEach(([label, method, confirm, condition]) => {
 			if (typeof condition === 'undefined' || condition) {
 				frm.add_custom_button(

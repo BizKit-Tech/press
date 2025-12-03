@@ -709,6 +709,10 @@ class DatabaseServer(BaseServer):
 			log_error("Exporters Install Exception", server=self.as_dict())
 
 	@frappe.whitelist()
+	def show_root_password(self):
+		frappe.msgprint(self.get_password("mariadb_root_password"), title="Password", indicator="green")
+
+	@frappe.whitelist()
 	def reset_root_password(self):
 		if self.is_primary:
 			self.reset_root_password_primary()
