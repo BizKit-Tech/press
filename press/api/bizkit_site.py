@@ -145,10 +145,16 @@ def create_database_server(project_name, cluster_name, db_instance_type, db_stor
     return database_doc.name
 
 def create_app_server(project_name, cluster_name, environment, app_instance_type, app_volume_size, database_server_name, domain):
+    hostname = slugify(project_name)
+
+    if frappe.db.exists("Server", {"hostname": hostname, "domain": domain}):
+        count = frappe.db.count("Server", {"hostname": hostname, "domain": domain}) + 1
+        hostname += str(count)
+
     app_server_doc = frappe.get_doc({
         "doctype": "Server",
-        "hostname": slugify(project_name),
-        "hostname_abbreviation": slugify(project_name),
+        "hostname": hostname,
+        "hostname_abbreviation": hostname,
         "domain": domain,
         "title": project_name,
         "provider": "AWS EC2",
@@ -217,6 +223,11 @@ def create_bench(deploy_candidate):
 def create_site(company_name, company_name_abbr, bench_name, product, tenancy, release_group, cluster_name, app_server_name, project_name, team, domain, site_plan, backup):
     bench_doc = frappe.get_doc("Bench", bench_name)
     bench_apps = [{"app": app.app} for app in bench_doc.apps]
+
+    subdomain = slugify(project_name)
+    if frappe.db.exists("Site", {"subdomain": subdomain, "domain": domain}):
+        count = frappe.db.count("Site", {"subdomain": subdomain, "domain": domain}) + 1
+        subdomain += str(count)
     
     site_doc = frappe.get_doc({
         "doctype": "Site",
@@ -228,7 +239,7 @@ def create_site(company_name, company_name_abbr, bench_name, product, tenancy, r
         "release_group": release_group,
         "cluster": cluster_name,
         "server": app_server_name,
-        "subdomain": slugify(project_name),
+        "subdomain": subdomain,
         "domain": domain,
         "team": team,
         "apps": bench_apps,
