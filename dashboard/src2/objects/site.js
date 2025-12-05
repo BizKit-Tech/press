@@ -1330,7 +1330,7 @@ export default {
 					condition: () =>
 						site.doc.status !== 'Archived' && site.doc?.setup_wizard_complete,
 					onClick() {
-						window.open(`https://${site.name}`, '_blank');
+						window.open(`${site.doc?.site_url}`, '_blank');
 					}
 				},
 				{

@@ -47,6 +47,34 @@
 				Upgrade Plan
 			</Button>
 		</DismissableBanner>
+		<div class="rounded-md border">
+			<div class="h-12 border-b px-5 py-4">
+				<h2 class="text-lg font-medium text-gray-900">Site Information</h2>
+			</div>
+			<div>
+				<div
+					v-for="d in siteInformation"
+					:key="d.label"
+					class="flex items-center px-5 py-3 last:pb-5 even:bg-gray-50/70"
+				>
+					<div class="w-1/3 text-base text-gray-600">{{ d.label }}</div>
+					<div
+						class="flex w-2/3 items-center space-x-2 text-base text-gray-900"
+					>
+						<div v-if="d.prefix">
+							<component :is="d.prefix" />
+						</div>
+						<span>
+							{{ d.value }}
+						</span>
+						<div v-if="d.suffix">
+							<component :is="d.suffix" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<SiteDailyUsage :site="site" />
 		<div class="col-span-1 rounded-md border lg:col-span-2">
 			<div class="grid grid-cols-2 lg:grid-cols-4">
 				<div class="border-b border-r p-5 lg:border-b-0">
@@ -186,35 +214,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="rounded-md border">
-			<div class="h-12 border-b px-5 py-4">
-				<h2 class="text-lg font-medium text-gray-900">Site Information</h2>
-			</div>
-			<div>
-				<div
-					v-for="d in siteInformation"
-					:key="d.label"
-					class="flex items-center px-5 py-3 last:pb-5 even:bg-gray-50/70"
-				>
-					<div class="w-1/3 text-base text-gray-600">{{ d.label }}</div>
-					<div
-						class="flex w-2/3 items-center space-x-2 text-base text-gray-900"
-					>
-						<div v-if="d.prefix">
-							<component :is="d.prefix" />
-						</div>
-						<span>
-							{{ d.value }}
-						</span>
-						<div v-if="d.suffix">
-							<component :is="d.suffix" />
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<SiteDailyUsage :site="site" />
 
 		<!-- Tags -->
 		<div class="col-span-1 flex items-center space-x-2 lg:col-span-2">
@@ -336,7 +335,7 @@ export default {
 					value: this.$format.date(this.$site.doc?.creation)
 				},
 				{
-					label: 'Region',
+					label: 'Project',
 					value: this.$site.doc?.cluster.title
 				},
 				{
