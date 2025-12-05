@@ -9,7 +9,14 @@
 				All analytics →
 			</router-link>
 		</div>
+		<div
+			v-if="!$resources.requestCounter.loading && (!dailyUsageData || dailyUsageData.datasets[0].length === 0)"
+			class="flex h-32 items-center justify-center text-gray-500"
+		>
+			No data available
+		</div>
 		<LineChart
+			v-else
 			title="Daily Usage"
 			type="time"
 			:key="dailyUsageData"
