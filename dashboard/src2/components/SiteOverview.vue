@@ -249,7 +249,7 @@
 	</div>
 </template>
 <script>
-import { getCachedDocumentResource, Progress, Tooltip } from 'frappe-ui';
+import { getCachedDocumentResource, Progress, Tooltip, Button } from 'frappe-ui';
 import { h, defineAsyncComponent } from 'vue';
 import { toast } from 'vue-sonner';
 import InfoIcon from '~icons/lucide/info';
@@ -337,23 +337,7 @@ export default {
 				},
 				{
 					label: 'Region',
-					value: this.$site.doc?.cluster.title,
-					prefix: h('img', {
-						src: this.$site.doc?.cluster.image,
-						alt: this.$site.doc?.cluster.title,
-						class: 'h-4 w-4'
-					})
-				},
-				{
-					label: 'Inbound IP',
-					value: this.$site.doc?.inbound_ip,
-					suffix: h(
-						Tooltip,
-						{
-							text: 'Use this for adding A records for your site'
-						},
-						() => h(InfoIcon, { class: 'h-4 w-4 text-gray-500' })
-					)
+					value: this.$site.doc?.cluster.title
 				},
 				{
 					label: 'Outbound IP',
@@ -364,6 +348,20 @@ export default {
 							text: 'Use this for whitelisting our server on a 3rd party service'
 						},
 						() => h(InfoIcon, { class: 'h-4 w-4 text-gray-500' })
+					)
+				},
+				{
+					label: 'Site URL',
+					value: this.$site.doc?.site_url || 'Not set',
+					suffix: h(
+						Button,
+						{
+							variant: 'ghost',
+							size: 'sm',
+							icon: 'external-link',
+							link: this.$site.doc?.site_url,
+							target: '_blank'
+						}
 					)
 				}
 			];

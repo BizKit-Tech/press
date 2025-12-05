@@ -220,6 +220,7 @@ class Site(Document, TagHelpers):
 		"update_trigger_time",
 		"additional_system_user_created",
 		"domain",
+		"site_url"
 	)
 
 	@staticmethod
