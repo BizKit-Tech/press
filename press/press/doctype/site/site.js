@@ -136,6 +136,11 @@ frappe.ui.form.on('Site', {
 			// 	),
 			// ],
 			[__('Show Admin Password'), 'show_admin_password'],
+			[
+				__('Recheck Site Status'),
+				'recheck_site_status',
+				frm.doc.status == 'Broken',
+			],
 		].forEach(([label, method, condition]) => {
 			if (typeof condition === 'undefined' || condition) {
 				frm.add_custom_button(

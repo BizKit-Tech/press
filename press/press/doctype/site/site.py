@@ -171,6 +171,7 @@ class Site(Document, TagHelpers):
 		setup_wizard_complete: DF.Check
 		setup_wizard_status_check_next_retry_on: DF.Datetime | None
 		setup_wizard_status_check_retries: DF.Int
+		site_url: DF.Data
 		skip_auto_updates: DF.Check
 		skip_failing_patches: DF.Check
 		skip_scheduled_backups: DF.Check
@@ -1440,6 +1441,24 @@ class Site(Document, TagHelpers):
 	@frappe.whitelist()
 	def show_admin_password(self):
 		frappe.msgprint(self.get_password("admin_password"), title="Password", indicator="green")
+
+	@frappe.whitelist()
+	def recheck_site_status(self):
+		try:
+			r = requests.get(self.site_url, timeout=5)
+			if r.status_code in [200, 302]:
+				status = "Active"
+				frappe.msgprint(f"Site <b>{self.site_url}</b> is UP (200 OK or 302 Found)", title="Site Active", indicator="green")
+			else:
+				status = "Broken"
+				frappe.msgprint(f"Site <b>{self.site_url}</b> is DOWN: {r.status_code}", title="Site Down", indicator="red")
+		except requests.exceptions.RequestException as e:
+			status = "Broken"
+			frappe.msgprint(f"Site <b>{self.site_url}</b> is DOWN: {e}", title="Site Down", indicator="red")
+
+		if self.status != status:
+			self.status = status
+			self.save()
 
 	def get_connection_as_admin(self):
 		password = get_decrypted_password("Site", self.name, "admin_password")

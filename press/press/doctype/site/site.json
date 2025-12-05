@@ -6,6 +6,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "site_url",
   "company_name",
   "company_name_abbreviation",
   "subdomain",
@@ -647,6 +648,12 @@
    "fieldname": "update_start_date",
    "fieldtype": "Date",
    "label": "Update Start Date"
+  },
+  {
+   "fieldname": "site_url",
+   "fieldtype": "Data",
+   "label": "Site URL",
+   "reqd": 1
   }
  ],
  "links": [
@@ -721,7 +728,7 @@
    "link_fieldname": "site"
   }
  ],
- "modified": "2025-08-04 13:35:14.203653",
+ "modified": "2025-12-05 13:08:08.494127",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Site",
