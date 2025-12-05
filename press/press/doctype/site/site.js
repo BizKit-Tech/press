@@ -422,6 +422,16 @@ frappe.ui.form.on('Site', {
 		const company_abbr = frm.doc.company_name.split(' ').map(word => word[0]).join('');
 		frm.set_value('company_name_abbreviation', company_abbr.toUpperCase());
 	},
+	mark_setup_wizard_complete: function (frm) {
+		frappe.confirm(
+			__(`Marking the setup wizard as complete will override the current setup status. Only do this if you are certain the setup was completed manually.
+				<br><br>Are you sure you want to continue?`),
+			() => {
+				frm.set_value('setup_wizard_complete', 1);
+				frm.save();
+			}
+		);
+	}
 });
 
 function login_as_admin(site_name, reason = null) {

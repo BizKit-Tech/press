@@ -75,6 +75,7 @@
   "update_on_day_of_month",
   "setup_wizard_status_section",
   "setup_wizard_complete",
+  "mark_setup_wizard_complete",
   "column_break_vbgj",
   "setup_wizard_status_check_retries",
   "setup_wizard_status_check_next_retry_on",
@@ -650,10 +651,18 @@
    "label": "Update Start Date"
   },
   {
+   "description": "http(s)://yourdomain.com",
    "fieldname": "site_url",
    "fieldtype": "Data",
    "label": "Site URL",
    "reqd": 1
+  },
+  {
+   "depends_on": "eval:!doc.setup_wizard_complete",
+   "description": "Use this only if the setup wizard was completed manually.",
+   "fieldname": "mark_setup_wizard_complete",
+   "fieldtype": "Button",
+   "label": "Mark Setup Wizard as Complete"
   }
  ],
  "links": [
@@ -728,7 +737,7 @@
    "link_fieldname": "site"
   }
  ],
- "modified": "2025-12-05 13:08:08.494127",
+ "modified": "2025-12-05 19:16:24.163152",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Site",
