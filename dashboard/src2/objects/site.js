@@ -262,7 +262,7 @@ export default {
 				route: 'insights',
 				type: 'Component',
 				condition: site => site.doc?.status !== 'Archived',
-				redirectTo: 'Site Analytics',
+				redirectTo: 'Site Jobs',
 				childrenRoutes: [
 					'Site Jobs',
 					'Site Job',

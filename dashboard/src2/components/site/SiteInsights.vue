@@ -76,7 +76,12 @@ export default {
 	},
 	mounted() {
 		if (this.$route.name === 'Site Insights') {
-			this.$router.push({ name: 'Site Analytics' });
+			this.$router.push({ 
+				name: 'Site Jobs',
+				params: { 
+					name: this.site
+				} 
+			});
 		}
 	},
 	methods: {
