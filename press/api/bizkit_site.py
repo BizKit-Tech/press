@@ -224,6 +224,9 @@ def create_site(company_name, company_name_abbr, bench_name, product, tenancy, r
     bench_doc = frappe.get_doc("Bench", bench_name)
     bench_apps = [{"app": app.app} for app in bench_doc.apps]
 
+    server_doc = frappe.get_doc("Server", app_server_name)
+    server_ip = server_doc.ip
+
     subdomain = slugify(project_name)
     if frappe.db.exists("Site", {"subdomain": subdomain, "domain": domain}):
         count = frappe.db.count("Site", {"subdomain": subdomain, "domain": domain}) + 1
@@ -233,6 +236,7 @@ def create_site(company_name, company_name_abbr, bench_name, product, tenancy, r
         "doctype": "Site",
         "company_name": company_name,
         "company_name_abbreviation": company_name_abbr,
+        "site_url": f"http://{server_ip}",
         "bench": bench_name,
         "product": product,
         "tenancy": tenancy,
