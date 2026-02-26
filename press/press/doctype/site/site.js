@@ -139,7 +139,7 @@ frappe.ui.form.on('Site', {
 			[
 				__('Recheck Site Status'),
 				'recheck_site_status',
-				frm.doc.status == 'Broken',
+				frm.doc.status !== 'Archived',
 			],
 		].forEach(([label, method, condition]) => {
 			if (typeof condition === 'undefined' || condition) {
