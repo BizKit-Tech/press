@@ -160,26 +160,11 @@ export default {
 				}
 			},
 			{
-				label: 'Region',
+				label: 'Project',
 				fieldname: 'cluster',
 				width: 1,
 				format(value, row) {
 					return row.cluster_title || value;
-				},
-				prefix(row) {
-					return h('img', {
-						src: row.cluster_image,
-						class: 'w-4 h-4',
-						alt: row.cluster_title
-					});
-				}
-			},
-			{
-				label: 'Bench Group',
-				fieldname: 'group',
-				width: '15rem',
-				format(value, row) {
-					return row.group_public ? 'Shared' : row.group_title || value;
 				}
 			},
 			{
