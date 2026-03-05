@@ -56,6 +56,8 @@ export default {
 				unreadNotificationsCount.setData(data => data - 1);
 				if (row.route) router.push(row.route);
 			});
+
+			window.open(`/app/press-notification/${row.name}`, '_blank');
 		},
 		actions({ listResource: notifications }) {
 			return [
