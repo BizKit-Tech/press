@@ -550,7 +550,6 @@ export default {
 					filters: site => {
 						return {
 							site: site.doc?.name,
-							files_availability: 'Available',
 							status: ['in', ['Pending', 'Running', 'Success']]
 						};
 					},
@@ -567,7 +566,8 @@ export default {
 						'remote_database_file',
 						'remote_public_file',
 						'remote_private_file',
-						'remote_config_file'
+						'remote_config_file',
+						'files_availability'
 					],
 					columns: [
 						{
@@ -578,7 +578,12 @@ export default {
 								return `Backup on ${date(value, 'llll')}`;
 							}
 						},
-
+						{
+							label: 'Status',
+							fieldname: 'status',
+							type: 'Badge',
+							width: 0.5,
+						},
 						{
 							label: 'Database',
 							fieldname: 'database_size',
@@ -686,6 +691,7 @@ export default {
 							},
 							{
 								group: 'Download',
+								condition: () => row.files_availability === 'Available',
 								items: [
 									{
 										label: 'Download Database',
@@ -718,7 +724,7 @@ export default {
 							},
 							{
 								group: 'Restore',
-								condition: () => row.offsite,
+								condition: () => row.offsite && row.files_availability === 'Available',
 								items: [
 									{
 										label: 'Restore Backup',
