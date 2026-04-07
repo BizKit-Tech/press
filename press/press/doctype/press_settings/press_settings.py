@@ -125,6 +125,7 @@ class PressSettings(Document):
 		remote_uploads_bucket: DF.Data | None
 		root_domain: DF.Data | None
 		rsa_key_size: DF.Literal["2048", "3072", "4096"]
+		server_manager_role: DF.Link | None
 		spaces_domain: DF.Link | None
 		ssh_certificate_authority: DF.Link | None
 		staging_expiry: DF.Int

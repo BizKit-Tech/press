@@ -191,6 +191,8 @@
   "log_server",
   "telegram_alert_chat_id",
   "telegram_alerts_chat_group",
+  "maintenance_section",
+  "server_manager_role",
   "feature_flags_tab",
   "verify_cards_with_micro_charge",
   "enable_google_oauth",
@@ -1333,11 +1335,23 @@
    "fieldname": "default_ssh_key",
    "fieldtype": "Attach",
    "label": "Default SSH Key"
+  },
+  {
+   "fieldname": "maintenance_section",
+   "fieldtype": "Section Break",
+   "label": "Maintenance"
+  },
+  {
+   "description": "Role with permission to manage and shut down servers",
+   "fieldname": "server_manager_role",
+   "fieldtype": "Link",
+   "label": "Server Manager Role",
+   "options": "Role"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2025-02-04 19:30:46.938337",
+ "modified": "2026-04-07 19:02:13.302422",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Press Settings",
