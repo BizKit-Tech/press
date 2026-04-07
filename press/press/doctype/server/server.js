@@ -79,13 +79,25 @@ frappe.ui.form.on('Server', {
 				__('Disable Termination Protection'),
 				'disable_termination_protection',
 				true,
-				frm.doc.termination_protection === 'Enabled' && frm.doc.environment !== 'Production',
+				frm.doc.termination_protection === 'Enabled' && !frm.doc.locked,
 			],
 			[
 				__('Terminate Instance'),
 				'terminate_instance',
 				true,
-				frm.doc.termination_protection === 'Disabled' && frm.doc.environment !== 'Production',
+				frm.doc.termination_protection === 'Disabled' && !frm.doc.locked,
+			],
+			[
+				__('Unlock for Termination'),
+				'unlock_for_termination',
+				true,
+				frm.doc.locked && frm.doc.environment === 'Production',
+			],
+			[
+				__('Lock to Protect from Termination'),
+				'lock_for_protection',
+				true,
+				!frm.doc.locked && frm.doc.environment === 'Production',
 			],
 			// [__('Update Agent'), 'update_agent', true, frm.doc.is_server_setup],
 			// [

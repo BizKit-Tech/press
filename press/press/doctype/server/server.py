@@ -1328,6 +1328,7 @@ class Server(BaseServer):
 		is_standalone: DF.Check
 		is_standalone_setup: DF.Check
 		is_upstream_setup: DF.Check
+		locked: DF.Check
 		managed_database_service: DF.Link | None
 		mounts: DF.Table[ServerMount]
 		new_worker_allocation: DF.Check
@@ -2103,6 +2104,34 @@ class Server(BaseServer):
 	def disable_termination_protection(self):
 		termination_protection = "false"
 		self._change_termination_protection(termination_protection)
+
+	@frappe.whitelist()
+	def unlock_for_termination(self):
+		permitted_role = frappe.db.get_single_value("Press Settings", "server_manager_role")
+		if permitted_role not in frappe.get_roles(frappe.session.user):
+			frappe.throw(
+				_(
+					"You have no permission to perform this action. Please contact your Administrator.",
+				),
+				title=_("Not Allowed")
+			)
+
+		self.locked = 0
+		self.save()
+	
+	@frappe.whitelist()
+	def lock_for_protection(self):
+		permitted_role = frappe.db.get_single_value("Press Settings", "server_manager_role")
+		if permitted_role not in frappe.get_roles(frappe.session.user):
+			frappe.throw(
+				_(
+					"You have no permission to perform this action. Please contact your Administrator."
+				),
+				title=_("Not Allowed")
+			)
+
+		self.locked = 1
+		self.save()
 
 	@frappe.whitelist()
 	def terminate_instance(self):

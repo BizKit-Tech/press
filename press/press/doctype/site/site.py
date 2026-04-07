@@ -2638,6 +2638,16 @@ class Site(Document, TagHelpers):
 	def drop_site(self):
 		delete_site_and_related_docs(self)
 
+	@dashboard_whitelist()
+	def unlock_for_termination(self):
+		server = frappe.get_doc("Server", self.server)
+		server.unlock_for_termination()
+
+	@dashboard_whitelist()
+	def lock_for_protection(self):
+		server = frappe.get_doc("Server", self.server)
+		server.lock_for_protection()
+
 	@frappe.whitelist()
 	def get_actions(self):
 		is_group_public = frappe.get_cached_value("Release Group", self.group, "public")
@@ -2645,6 +2655,12 @@ class Site(Document, TagHelpers):
 		server_state = server.instance_state
 		termination_protection = server.termination_protection
 		environment = server.environment
+		locked = cint(server.locked)
+		permitted = False
+
+		permitted_role = frappe.db.get_single_value("Press Settings", "server_manager_role")
+		if permitted_role in frappe.get_roles(frappe.session.user):
+			permitted = True
 
 		actions = [
 			{
@@ -2669,12 +2685,27 @@ class Site(Document, TagHelpers):
 				"doc_method": "reboot_instance",
 			},
 			{
+				"action": "Lock for protection",
+				"description": "Lock this site to disable deletion and protect the production server",
+				"button_label": "Lock",
+				"doc_method": "lock_for_protection",
+				"condition": environment == "Production" and permitted and not locked,
+			},
+			{
+				"group": "Dangerous Actions",
+				"action": "Unlock for termination",
+				"description": "This site is locked to prevent accidental deletion of a production server. Unlock to proceed with deletion",
+				"button_label": "Unlock",
+				"doc_method": "unlock_for_termination",
+				"condition": environment == "Production" and permitted and locked,
+			},
+			{
 				"group": "Dangerous Actions",
 				"action": "Disable termination protection",
 				"description": "Termination protection prevents accidental deletion of your site. To delete your site, you must disable termination protection first",
 				"button_label": "Disable",
 				"doc_method": "disable_termination_protection",
-				"condition": termination_protection == "Enabled" and environment != "Production",
+				"condition": termination_protection == "Enabled" and permitted and not locked,
 			},
 			{
 				"group": "Dangerous Actions",
@@ -2682,7 +2713,7 @@ class Site(Document, TagHelpers):
 				"description": "Termination protection prevents accidental deletion of your site",
 				"button_label": "Enable",
 				"doc_method": "enable_termination_protection",
-				"condition": termination_protection == "Disabled",
+				"condition": termination_protection == "Disabled" and permitted and not locked,
 			},
 			{
 				"group": "Dangerous Actions",
@@ -2690,7 +2721,7 @@ class Site(Document, TagHelpers):
 				"description": "When you drop your site, all site data is deleted forever",
 				"button_label": "Drop",
 				"doc_method": "drop_site",
-				"condition": termination_protection == "Disabled" and environment != "Production",
+				"condition": termination_protection == "Disabled" and permitted and not locked,
 			},
 		]
 
