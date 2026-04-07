@@ -24,6 +24,7 @@
   "is_self_hosted",
   "is_server_renamed",
   "public",
+  "locked",
   "billing_section",
   "team",
   "column_break_11",
@@ -643,10 +644,17 @@
    "fieldtype": "Data",
    "label": "Database Security Group",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "locked",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Locked"
   }
  ],
  "links": [],
- "modified": "2025-06-16 19:13:15.568230",
+ "modified": "2026-04-07 18:45:11.752693",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Server",
