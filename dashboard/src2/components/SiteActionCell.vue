@@ -83,7 +83,9 @@ function getSiteActionHandler(action) {
 		'Stop instance': onStopInstance,
 		'Reboot instance': onRebootInstance,
 		'Enable termination protection': onEnableTerminationProtection,
-		'Disable termination protection': onDisableTerminationProtection
+		'Disable termination protection': onDisableTerminationProtection,
+		'Unlock for termination': onUnlockForTermination,
+		'Lock for protection': onLockForProtection
 	};
 	if (actionHandlers[action]) {
 		actionHandlers[action].call(this);
@@ -166,6 +168,39 @@ function onDisableTerminationProtection() {
 			theme: 'red',
 			onClick({ hide }) {
 				return site.disableTerminationProtection.submit().then(hide);
+			}
+		}
+	});
+}
+
+function onUnlockForTermination() {
+	return confirmDialog({
+		title: 'Unlock for Termination',
+		message: `
+			Are you sure you want to unlock this site? This will allow the site to be deleted.
+		`,
+		primaryAction: {
+			label: 'Unlock',
+			variant: 'solid',
+			theme: 'red',
+			onClick({ hide }) {
+				return site.unlock.submit().then(hide);
+			}
+		}
+	});
+}
+
+function onLockForProtection() {
+	return confirmDialog({
+		title: 'Lock for Protection',
+		message: `
+			Are you sure you want to lock this site? This will prevent the site from being deleted.
+		`,
+		primaryAction: {
+			label: 'Lock',
+			variant: 'solid',
+			onClick({ hide }) {
+				return site.lock.submit().then(hide);
 			}
 		}
 	});

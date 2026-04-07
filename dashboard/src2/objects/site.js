@@ -65,6 +65,8 @@ export default {
 		rebootInstance: 'reboot_instance',
 		enableTerminationProtection: 'enable_termination_protection',
 		disableTerminationProtection: 'disable_termination_protection',
+		unlock: 'unlock_for_termination',
+		lock: 'lock_for_protection',
 		dropSite: 'drop_site',
 		updateSite: 'update_site'
 	},
