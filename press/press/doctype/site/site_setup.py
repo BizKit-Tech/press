@@ -398,6 +398,12 @@ class SiteSetup:
                 commands.append(prereq_script_command)
 
             commands.append(f'source ~/.profile && (cd {self.frappe_bench_dir} && {self.bench_path} get-app {repo_url} --branch {branch})')
+
+        if self.environment == "Development":
+            commands.extend([
+                'echo "Restarting bench..."',
+                'source ~/.profile && sudo systemctl restart bench-start.service'
+            ])
         
         output, traceback = self.execute_commands(commands)
         self.update_agent_job_step("Get Additional Apps", start_time, output, traceback)
@@ -518,6 +524,8 @@ class SiteSetup:
             answer_no = ""
         commands = [
             'echo "Running initial setup..."',
+            f'echo Company Name: {self.site.company_name}',
+            f'echo Company Abbreviation: {self.site.company_name_abbreviation}',
             f'source ~/.profile && (cd {self.frappe_bench_dir} && {answer_no}{self.bench_path} run-initial-setup --company-name "{self.site.company_name}" --company-abbreviation "{self.site.company_name_abbreviation}" --mariadb-root-login {self.db_user} --mariadb-root-password {self.db_root_password} --keep-active-domains --force-create-db {hris_config})',
         ]
         output, traceback = self.execute_commands(commands)
