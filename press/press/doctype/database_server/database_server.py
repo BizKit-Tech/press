@@ -474,7 +474,8 @@ class DatabaseServer(BaseServer):
 		reference_date = datetime(2023, 1, 1)  # A known Sunday, for reference
 		start_day_index = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].index(day)
 
-		start_dt = reference_date + timedelta(days=start_day_index) + self.maintenance_window_start_time
+		start_time = datetime.strptime(f"{self.maintenance_window_start_time}", "%H:%M:%S")
+		start_dt = reference_date + timedelta(days=start_day_index, hours=start_time.hour, minutes=start_time.minute)
 		start_dt = start_dt.replace(second=0, microsecond=0)
 		start_dt = start_dt.replace(tzinfo=timezone.utc) - utc8_offset
 
