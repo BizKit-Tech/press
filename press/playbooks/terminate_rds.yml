@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    instance_abbr: '{{ instance_abbr }}'
+    security_group_id: '{{ security_group_id }}'
+  roles:
+    - role: terminate_rds

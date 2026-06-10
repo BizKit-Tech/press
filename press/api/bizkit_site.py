@@ -44,34 +44,41 @@ def _new(args):
     site_plan_details = get_site_plan_details(site_plan)
     domain = frappe.db.get_value("Root Domain", {"environment": environment}, "name")
     is_new = cluster == "New Client"
+    created = {}
 
     try:
         if is_new:
             print("Creating new client")
             print("Creating cluster")
             cluster = create_cluster(project_name)
+            created["cluster"] = cluster
             print("Creating database server")
             db_server = create_database_server(project_name, cluster, site_plan_details)
+            created["db_server"] = db_server
         else:
             cluster = project_name
             db_server = frappe.db.get_value("Database Server", {"cluster": cluster, "is_server_setup": 1}, "name")
 
         print("Creating app server")
         app_server = create_app_server(project_name, cluster, environment, site_plan_details, db_server, domain)
+        created["app_server"] = app_server
 
         if release_group := get_existing_release_group(apps):
             print("Adding server to existing release group")
         else:
             print("Creating new release group")
             release_group = create_release_group(project_name, apps, team)
+            created["release_group"] = release_group
             print("Creating deploy candidate")
             create_deploy_candidate(release_group)
 
         print("Adding server to release group and creating bench")
         bench = add_server_to_release_group(release_group, app_server)
+        created["bench"] = bench
 
         print("Creating site")
         site = create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan, backup)
+        created["site"] = site.name
 
         create_notification({
             "team": team,
@@ -86,15 +93,61 @@ def _new(args):
         if is_new:
             cluster = project_name
 
+        rollback(created, is_new)
+
         create_notification({
             "team": team,
             "doctype": "Cluster",
             "docname": cluster,
             "title": "Site Creation Failed",
-            "message": "An error occurred while creating the site. Please see the traceback for more details.",
+            "message": "An error occurred while creating the site. Automated rollback has been initiated. Please see the traceback for more details.",
             "traceback": str(e),
         })
         raise e
+
+
+def rollback(created, is_new):
+    # Tear down in reverse creation order; swallow each error so one failure
+    # doesn't block the remaining cleanup steps.
+    if site := created.get("site"):
+        try:
+            frappe.delete_doc("Site", site)
+            frappe.db.commit()
+        except Exception:
+            frappe.log_error("Rollback: failed to delete Site", site)
+
+    if bench := created.get("bench"):
+        try:
+            frappe.delete_doc("Bench", bench)
+            frappe.db.commit()
+        except Exception:
+            frappe.log_error("Rollback: failed to delete Bench", bench)
+
+    if release_group := created.get("release_group"):
+        try:
+            frappe.delete_doc("Release Group", release_group)
+            frappe.db.commit()
+        except Exception:
+            frappe.log_error("Rollback: failed to delete Release Group", release_group)
+
+    if app_server := created.get("app_server"):
+        try:
+            frappe.get_doc("Server", app_server).terminate_instance()
+        except Exception:
+            frappe.log_error("Rollback: failed to terminate App Server", app_server)
+
+    if is_new:
+        if db_server := created.get("db_server"):
+            try:
+                frappe.get_doc("Database Server", db_server).terminate_instance()
+            except Exception:
+                frappe.log_error("Rollback: failed to terminate Database Server", db_server)
+
+        if cluster := created.get("cluster"):
+            try:
+                frappe.get_doc("Cluster", cluster).delete_vpc()
+            except Exception:
+                frappe.log_error("Rollback: failed to delete Cluster VPC", cluster)
 
 
 def get_site_plan_details(site_plan):

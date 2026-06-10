@@ -889,5 +889,34 @@ class Cluster(Document):
 		except Exception:
 			self.status = "Pending"
 			log_error("VPC Setup Exception", server=self.as_dict())
-		
+
 		self.save()
+
+	def delete_vpc(self):
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		try:
+			ansible = Ansible(
+				playbook="delete_vpc.yml",
+				server=frappe._dict({"doctype": self.doctype, "name": self.name, "ip": self.name.lower().replace(" ", "_")}),
+				user="ubuntu",
+				port=22,
+				variables={
+					"vpc_id": self.vpc_id or "",
+					"route_table_id": self.route_table_id or "",
+					"subnet_cidr": self.subnet_cidr_block or "",
+					"subnet_2_cidr": self.subnet_2_cidr_block or "",
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+				},
+			)
+			play = ansible.run()
+			if play.status == "Success":
+				frappe.delete_doc("Cluster", self.name)
+				frappe.db.commit()
+			else:
+				log_error("VPC Deletion Failed", server=self.as_dict())
+		except Exception:
+			log_error("VPC Deletion Exception", server=self.as_dict())
