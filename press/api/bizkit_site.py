@@ -1,5 +1,7 @@
 import frappe
 import re
+from frappe.model.dynamic_links import get_dynamic_link_map
+from frappe.model.rename_doc import get_link_fields
 
 
 def slugify(s):
@@ -106,33 +108,65 @@ def _new(args):
         raise e
 
 
+def force_delete(doctype, name):
+    # Delete all standard Link references
+    for lf in get_link_fields(doctype):
+        link_dt, link_field, issingle = lf["parent"], lf["fieldname"], lf["issingle"]
+        if issingle:
+            continue
+        for row in frappe.db.get_values(link_dt, {link_field: name}, ["name", "parent", "parenttype"], as_dict=True):
+            target_dt = row.parenttype if row.parent else link_dt
+            target_name = row.parent or row.name
+            try:
+                frappe.delete_doc(target_dt, target_name, force=True, ignore_permissions=True)
+            except Exception:
+                frappe.log_error(f"force_delete: failed to delete linked {target_dt}", target_name)
+
+    # Delete all Dynamic Link references (e.g. Press Notification via document_type/document_name)
+    for df in get_dynamic_link_map().get(doctype, []):
+        if frappe.get_meta(df.parent).issingle:
+            continue
+        for row in frappe.db.sql(
+            f"SELECT `name`, `parent`, `parenttype` FROM `tab{df.parent}` WHERE `{df.options}`=%s AND `{df.fieldname}`=%s",
+            (doctype, name),
+            as_dict=True,
+        ):
+            target_dt = row.parenttype if row.parent else df.parent
+            target_name = row.parent or row.name
+            try:
+                frappe.delete_doc(target_dt, target_name, force=True, ignore_permissions=True)
+            except Exception:
+                frappe.log_error(f"force_delete: failed to delete dynamic-linked {target_dt}", target_name)
+
+    frappe.delete_doc(doctype, name, ignore_permissions=True)
+    frappe.db.commit()
+
+
 def rollback(created, is_new):
     # Tear down in reverse creation order; swallow each error so one failure
     # doesn't block the remaining cleanup steps.
     if site := created.get("site"):
         try:
-            frappe.delete_doc("Site", site)
-            frappe.db.commit()
+            force_delete("Site", site)
         except Exception:
             frappe.log_error("Rollback: failed to delete Site", site)
 
     if bench := created.get("bench"):
         try:
-            frappe.delete_doc("Bench", bench)
-            frappe.db.commit()
+            force_delete("Bench", bench)
         except Exception:
             frappe.log_error("Rollback: failed to delete Bench", bench)
 
     if release_group := created.get("release_group"):
         try:
-            frappe.delete_doc("Release Group", release_group)
-            frappe.db.commit()
+            force_delete("Release Group", release_group)
         except Exception:
             frappe.log_error("Rollback: failed to delete Release Group", release_group)
 
     if app_server := created.get("app_server"):
         try:
             frappe.get_doc("Server", app_server).terminate_instance()
+            force_delete("Server", app_server)
         except Exception:
             frappe.log_error("Rollback: failed to terminate App Server", app_server)
 
@@ -140,12 +174,14 @@ def rollback(created, is_new):
         if db_server := created.get("db_server"):
             try:
                 frappe.get_doc("Database Server", db_server).terminate_instance()
+                force_delete("Database Server", db_server)
             except Exception:
                 frappe.log_error("Rollback: failed to terminate Database Server", db_server)
 
         if cluster := created.get("cluster"):
             try:
                 frappe.get_doc("Cluster", cluster).delete_vpc()
+                force_delete("Cluster", cluster)
             except Exception:
                 frappe.log_error("Rollback: failed to delete Cluster VPC", cluster)
 

@@ -913,10 +913,7 @@ class Cluster(Document):
 				},
 			)
 			play = ansible.run()
-			if play.status == "Success":
-				frappe.delete_doc("Cluster", self.name)
-				frappe.db.commit()
-			else:
+			if play.status != "Success":
 				log_error("VPC Deletion Failed", server=self.as_dict())
 		except Exception:
 			log_error("VPC Deletion Exception", server=self.as_dict())
