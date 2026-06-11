@@ -57,6 +57,7 @@ def _new(args):
             print("Creating database server")
             db_server = create_database_server(project_name, cluster, site_plan_details)
             created["db_server"] = db_server
+            setup_database_server(db_server)
         else:
             cluster = project_name
             db_server = frappe.db.get_value("Database Server", {"cluster": cluster, "is_server_setup": 1}, "name")
@@ -64,6 +65,7 @@ def _new(args):
         print("Creating app server")
         app_server = create_app_server(project_name, cluster, environment, site_plan_details, db_server, domain)
         created["app_server"] = app_server
+        setup_app_server(app_server)
 
         if release_group := get_existing_release_group(apps):
             print("Adding server to existing release group")
@@ -238,9 +240,13 @@ def create_database_server(project_name, cluster_name, plan):
     })
     database_doc.insert()
     frappe.db.commit()
+    return database_doc.name
+
+
+def setup_database_server(db_server_name):
+    database_doc = frappe.get_doc("Database Server", db_server_name)
     database_doc._setup_server()
     assert_server_active(database_doc, "Database Server")
-    return database_doc.name
 
 
 def create_app_server(project_name, cluster_name, environment, plan, database_server_name, domain):
@@ -263,10 +269,14 @@ def create_app_server(project_name, cluster_name, environment, plan, database_se
     })
     app_server_doc.insert()
     frappe.db.commit()
+    return app_server_doc.name
+
+
+def setup_app_server(app_server_name):
+    app_server_doc = frappe.get_doc("Server", app_server_name)
     app_server_doc._setup_server()
     app_server_doc.connect_to_rds()
     assert_server_active(app_server_doc, "App Server")
-    return app_server_doc.name
 
 
 def create_release_group(project_name, apps, team):
