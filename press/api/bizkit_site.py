@@ -116,9 +116,11 @@ def force_delete(doctype, name):
         link_dt, link_field, issingle = lf["parent"], lf["fieldname"], lf["issingle"]
         if issingle:
             continue
-        for row in frappe.db.get_values(link_dt, {link_field: name}, ["name", "parent", "parenttype"], as_dict=True):
-            target_dt = row.parenttype if row.parent else link_dt
-            target_name = row.parent or row.name
+        is_child = frappe.get_meta(link_dt).istable
+        fields = ["name", "parent", "parenttype"] if is_child else ["name"]
+        for row in frappe.db.get_values(link_dt, {link_field: name}, fields, as_dict=True):
+            target_dt = row.parenttype if is_child and row.parent else link_dt
+            target_name = row.parent if is_child and row.parent else row.name
             try:
                 frappe.delete_doc(target_dt, target_name, force=True, ignore_permissions=True)
             except Exception:
@@ -126,15 +128,18 @@ def force_delete(doctype, name):
 
     # Delete all Dynamic Link references (e.g. Press Notification via document_type/document_name)
     for df in get_dynamic_link_map().get(doctype, []):
-        if frappe.get_meta(df.parent).issingle:
+        meta = frappe.get_meta(df.parent)
+        if meta.issingle:
             continue
+        is_child = meta.istable
+        extra = ", `parent`, `parenttype`" if is_child else ""
         for row in frappe.db.sql(
-            f"SELECT `name`, `parent`, `parenttype` FROM `tab{df.parent}` WHERE `{df.options}`=%s AND `{df.fieldname}`=%s",
+            f"SELECT `name`{extra} FROM `tab{df.parent}` WHERE `{df.options}`=%s AND `{df.fieldname}`=%s",
             (doctype, name),
             as_dict=True,
         ):
-            target_dt = row.parenttype if row.parent else df.parent
-            target_name = row.parent or row.name
+            target_dt = row.parenttype if is_child and row.parent else df.parent
+            target_name = row.parent if is_child and row.parent else row.name
             try:
                 frappe.delete_doc(target_dt, target_name, force=True, ignore_permissions=True)
             except Exception:
@@ -168,24 +173,24 @@ def rollback(created, is_new):
     if app_server := created.get("app_server"):
         try:
             frappe.get_doc("Server", app_server).terminate_instance()
-            force_delete("Server", app_server)
         except Exception:
             frappe.log_error("Rollback: failed to terminate App Server", app_server)
+        force_delete("Server", app_server)
 
     if is_new:
         if db_server := created.get("db_server"):
             try:
                 frappe.get_doc("Database Server", db_server).terminate_instance()
-                force_delete("Database Server", db_server)
             except Exception:
                 frappe.log_error("Rollback: failed to terminate Database Server", db_server)
+            force_delete("Database Server", db_server)
 
         if cluster := created.get("cluster"):
             try:
                 frappe.get_doc("Cluster", cluster).delete_vpc()
-                force_delete("Cluster", cluster)
             except Exception:
                 frappe.log_error("Rollback: failed to delete Cluster VPC", cluster)
+            force_delete("Cluster", cluster)
 
 
 def get_site_plan_details(site_plan):
