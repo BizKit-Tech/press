@@ -13,6 +13,12 @@
 						onClick: () => (showTeamSwitcher = true)
 					},
 					{
+						label: 'View Desk',
+						icon: 'monitor',
+						condition: () => $team?.doc?.is_desk_user,
+						onClick: desk
+					},
+					{
 						label: 'Support & Docs',
 						icon: 'help-circle',
 						onClick: support
@@ -100,6 +106,12 @@ export default {
 		feedback() {
 			window.open(
 				'https://frappecloud.com/frappe-cloud-feedback/new',
+				'_blank'
+			);
+		},
+		desk() {
+			window.open(
+				`${window.location.protocol}//${window.location.host}/app`,
 				'_blank'
 			);
 		}

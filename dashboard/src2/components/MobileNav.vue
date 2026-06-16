@@ -19,6 +19,12 @@
 						onClick: () => (showTeamSwitcher = true)
 					},
 					{
+						label: 'View Desk',
+						icon: 'monitor',
+						condition: () => $team?.doc?.is_desk_user,
+						onClick: desk
+					},
+					{
 						label: 'Support & Docs',
 						icon: 'help-circle',
 						onClick: support
@@ -81,5 +87,12 @@ const showTeamSwitcher = ref(false);
 
 function support() {
 	window.open('https://frappecloud.com/support', '_blank');
+}
+
+function desk() {
+	window.open(
+		`${window.location.protocol}//${window.location.host}/app`,
+		'_blank'
+	);
 }
 </script>
