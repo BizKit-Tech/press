@@ -408,6 +408,35 @@ class DatabaseServer(BaseServer):
 			log_error("Database Server Setup Exception", server=self.as_dict())
 		self.save()
 
+	def terminate_instance(self):
+		settings = frappe.get_single("Press Settings")
+		aws_access_key_id = settings.aws_access_key_id
+		aws_secret_access_key = settings.get_password("aws_secret_access_key")
+
+		try:
+			ansible = Ansible(
+				playbook="terminate_rds.yml",
+				server=self,
+				user=self._ssh_user(),
+				port=self._ssh_port(),
+				variables={
+					"instance_abbr": self.hostname_abbreviation,
+					"security_group_id": self.security_group or "",
+					"ec2_access_key": aws_access_key_id,
+					"ec2_secret_key": aws_secret_access_key,
+				},
+			)
+			play = ansible.run()
+			self.reload()
+			if play.status == "Success":
+				self.status = "Archived"
+				self.is_server_setup = False
+			else:
+				log_error("RDS Termination Failed", server=self.as_dict())
+		except Exception:
+			log_error("RDS Termination Exception", server=self.as_dict())
+		self.save()
+
 	def format_backup_window(self):
 		# hh24:mi-hh24:mi
 
@@ -445,7 +474,8 @@ class DatabaseServer(BaseServer):
 		reference_date = datetime(2023, 1, 1)  # A known Sunday, for reference
 		start_day_index = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].index(day)
 
-		start_dt = reference_date + timedelta(days=start_day_index) + self.maintenance_window_start_time
+		start_time = datetime.strptime(f"{self.maintenance_window_start_time}", "%H:%M:%S")
+		start_dt = reference_date + timedelta(days=start_day_index, hours=start_time.hour, minutes=start_time.minute)
 		start_dt = start_dt.replace(second=0, microsecond=0)
 		start_dt = start_dt.replace(tzinfo=timezone.utc) - utc8_offset
 

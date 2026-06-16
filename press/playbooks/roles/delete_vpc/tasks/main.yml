@@ -1,0 +1,51 @@
+---
+- name: Delete route table
+  amazon.aws.ec2_vpc_route_table:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    route_table_id: '{{ route_table_id }}'
+    vpc_id: '{{ vpc_id }}'
+    state: absent
+    region: ap-southeast-1
+  when: route_table_id | length > 0
+  ignore_errors: true
+
+- name: Detach and delete internet gateway
+  amazon.aws.ec2_vpc_igw:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    vpc_id: '{{ vpc_id }}'
+    state: absent
+    region: ap-southeast-1
+  ignore_errors: true
+
+- name: Delete subnet 1
+  amazon.aws.ec2_vpc_subnet:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    vpc_id: '{{ vpc_id }}'
+    cidr: '{{ subnet_cidr }}'
+    state: absent
+    region: ap-southeast-1
+  when: subnet_cidr | length > 0
+  ignore_errors: true
+
+- name: Delete subnet 2
+  amazon.aws.ec2_vpc_subnet:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    vpc_id: '{{ vpc_id }}'
+    cidr: '{{ subnet_2_cidr }}'
+    state: absent
+    region: ap-southeast-1
+  when: subnet_2_cidr | length > 0
+  ignore_errors: true
+
+- name: Delete VPC
+  amazon.aws.ec2_vpc_net:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    vpc_id: '{{ vpc_id }}'
+    state: absent
+    region: ap-southeast-1
+  ignore_errors: true
