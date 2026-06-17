@@ -1,5 +1,6 @@
 import frappe
 from frappe.utils import add_to_date, today
+from press.api.bizkit_site import force_delete
 
 
 def _get_settings():
@@ -77,6 +78,7 @@ def suspend_temporary_sites():
 				f"Site {site.name} has been suspended and will be permanently deleted on {archive_date}."
 			)
 		except Exception:
+			frappe.db.rollback()
 			frappe.log_error("Temporary Site: suspend_temporary_sites failed", site.name)
 
 
@@ -85,7 +87,7 @@ def archive_expired_temporary_sites():
 
 	sites = _get_temporary_sites(f"""
 		AND s.status = 'Inactive'
-		AND DATE_ADD(s.takedown_date, INTERVAL {grace_period} DAY) <= '{today()}'
+		AND DATE_ADD(s.takedown_date, INTERVAL {int(grace_period)} DAY) <= '{today()}'
 	""")
 
 	for site in sites:
@@ -102,8 +104,6 @@ def archive_expired_temporary_sites():
 
 
 def teardown_temporary_site(site_doc):
-	from press.api.bizkit_site import force_delete
-
 	cluster_name = site_doc.cluster
 	server_name = site_doc.server
 	bench_name = site_doc.bench
