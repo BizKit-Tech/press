@@ -645,6 +645,11 @@
    "read_only": 1
   },
   {
+   "fieldname": "takedown_date",
+   "fieldtype": "Date",
+   "label": "Takedown Date"
+  },
+  {
    "depends_on": "eval:doc.update_trigger_frequency === 'Every 2 Weeks'",
    "fieldname": "update_start_date",
    "fieldtype": "Date",
