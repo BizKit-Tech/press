@@ -47,6 +47,12 @@
 				Upgrade Plan
 			</Button>
 		</DismissableBanner>
+		<AlertBanner
+			v-if="$site.doc.takedown_date"
+			class="col-span-1 lg:col-span-2"
+			type="warning"
+			:title="`This site is scheduled to be suspended on ${$site.doc.takedown_date}.`"
+		/>
 		<div class="rounded-md border">
 			<div class="h-12 border-b px-5 py-4">
 				<h2 class="text-lg font-medium text-gray-900">Site Information</h2>

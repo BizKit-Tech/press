@@ -68,7 +68,8 @@ export default {
 		unlock: 'unlock_for_termination',
 		lock: 'lock_for_protection',
 		dropSite: 'drop_site',
-		updateSite: 'update_site'
+		updateSite: 'update_site',
+		setTakedownDate: 'set_takedown_date'
 	},
 	list: {
 		route: '/sites',
@@ -1359,6 +1360,31 @@ export default {
 									`${window.location.protocol}//${window.location.host}/app/site/${site.name}`,
 									'_blank'
 								);
+							}
+						},
+						{
+							label: 'Set Takedown Date',
+							icon: 'calendar',
+							condition: () =>
+								$team.doc?.is_desk_user &&
+								['Development', 'Demo'].includes(site.doc?.environment),
+							onClick() {
+								confirmDialog({
+									title: 'Set Takedown Date',
+									fields: [
+										{
+											label: 'Takedown Date',
+											fieldname: 'takedown_date',
+											fieldtype: 'Date',
+											description:
+												'The site will be suspended on this date. Leave empty to remove the scheduled takedown.'
+										}
+									],
+									initialValues: { takedown_date: site.doc.takedown_date || '' },
+									onSuccess({ data: values }) {
+										site.setTakedownDate.submit({ date: values.takedown_date || null });
+									}
+								});
 							}
 						},
 						{
