@@ -193,6 +193,8 @@
   "telegram_alerts_chat_group",
   "maintenance_section",
   "server_manager_role",
+  "temporary_site_grace_period_days",
+  "temporary_site_warning_days",
   "feature_flags_tab",
   "verify_cards_with_micro_charge",
   "enable_google_oauth",
@@ -1347,6 +1349,18 @@
    "fieldtype": "Link",
    "label": "Server Manager Role",
    "options": "Role"
+  },
+  {
+   "default": "7",
+   "fieldname": "temporary_site_grace_period_days",
+   "fieldtype": "Int",
+   "label": "Temporary Site Grace Period (Days)"
+  },
+  {
+   "default": "3",
+   "fieldname": "temporary_site_warning_days",
+   "fieldtype": "Int",
+   "label": "Temporary Site Warning Days"
   }
  ],
  "issingle": 1,
