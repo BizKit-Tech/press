@@ -192,6 +192,9 @@ scheduler_events = {
 		"press.press.doctype.site_domain.site_domain.update_dns_type",
 		"press.press.doctype.press_webhook_log.press_webhook_log.clean_logs_older_than_24_hours",
 		"press.press.doctype.virtual_disk_snapshot.virtual_disk_snapshot.sync_all_snapshots_from_aws",
+		"press.press.doctype.site.bizkit_archive.notify_upcoming_takedowns",
+		"press.press.doctype.site.bizkit_archive.suspend_temporary_sites",
+		"press.press.doctype.site.bizkit_archive.archive_expired_temporary_sites",
 	],
 	"hourly": [
 		"press.press.doctype.site.backups.cleanup_local",
