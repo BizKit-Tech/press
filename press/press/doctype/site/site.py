@@ -2837,6 +2837,15 @@ class Site(Document, TagHelpers):
 
 		return [d for d in actions if d.get("condition", True)]
 
+	@frappe.whitelist()
+	def set_takedown_date(self, date=None):
+		frappe.only_for("System Manager")
+		environment = frappe.db.get_value("Server", self.server, "environment")
+		if date and environment == "Production":
+			frappe.throw("Temporary sites are not allowed for Production environments")
+		self.takedown_date = date
+		self.save(ignore_permissions=True)
+
 	@property
 	def hybrid_site(self) -> bool:
 		return bool(frappe.get_cached_value("Server", self.server, "is_self_hosted"))
