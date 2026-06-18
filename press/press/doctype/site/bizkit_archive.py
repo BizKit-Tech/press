@@ -9,6 +9,31 @@ def _get_settings():
 	return grace_period, warning_days
 
 
+def _get_email_recipients(site_name):
+	creator_email = frappe.db.get_value("Site", site_name, "owner")
+	sysmanager_emails = frappe.db.sql_list("""
+		SELECT DISTINCT u.email
+		FROM `tabHas Role` hr
+		JOIN `tabUser` u ON u.name = hr.parent
+		WHERE hr.role = 'System Manager'
+		  AND hr.parenttype = 'User'
+		  AND u.enabled = 1
+	""")
+	recipients = list(({creator_email} | set(sysmanager_emails)) - {None, ""})
+	return recipients
+
+
+def _send_email(recipients, subject, message):
+	if not recipients:
+		return
+	frappe.sendmail(
+		recipients=recipients,
+		subject=subject,
+		message=message,
+		now=True,
+	)
+
+
 def _create_notification(team, site_name, title, message):
 	notification_doc = frappe.get_doc({
 		"doctype": "Press Notification",
@@ -48,11 +73,15 @@ def notify_upcoming_takedowns():
 	for site in sites:
 		try:
 			archive_date = add_to_date(site.takedown_date, days=grace_period)
-			_create_notification(
-				site.team, site.name,
-				"Site Scheduled for Suspension",
+			body = (
 				f"Your site {site.name} is scheduled to be suspended on {site.takedown_date}. "
 				f"It will be permanently deleted on {archive_date}."
+			)
+			_create_notification(site.team, site.name, "Site Scheduled for Suspension", body)
+			_send_email(
+				_get_email_recipients(site.name),
+				f"[Press] Site {site.name} scheduled for suspension on {site.takedown_date}",
+				body,
 			)
 		except Exception:
 			frappe.log_error("Temporary Site: notify_upcoming_takedowns failed", site.name)
@@ -72,10 +101,12 @@ def suspend_temporary_sites():
 			frappe.get_doc("Server", site.server).stop_instance()
 			frappe.db.commit()
 			archive_date = add_to_date(site.takedown_date, days=grace_period)
-			_create_notification(
-				site.team, site.name,
-				"Site Suspended",
-				f"Site {site.name} has been suspended and will be permanently deleted on {archive_date}."
+			body = f"Site {site.name} has been suspended and will be permanently deleted on {archive_date}."
+			_create_notification(site.team, site.name, "Site Suspended", body)
+			_send_email(
+				_get_email_recipients(site.name),
+				f"[Press] Site {site.name} has been suspended",
+				body,
 			)
 		except Exception:
 			frappe.db.rollback()
@@ -93,11 +124,13 @@ def archive_expired_temporary_sites():
 	for site in sites:
 		try:
 			site_doc = frappe.get_doc("Site", site.name)
+			recipients = _get_email_recipients(site.name)
 			teardown_temporary_site(site_doc)
-			_create_notification(
-				site.team, site.name,
-				"Site Permanently Deleted",
-				f"Site {site.name} and its infrastructure have been permanently deleted."
+			body = f"Site {site.name} and its infrastructure have been permanently deleted."
+			_send_email(
+				recipients,
+				f"[Press] Site {site.name} has been permanently deleted",
+				body,
 			)
 		except Exception:
 			frappe.log_error("Temporary Site: archive_expired_temporary_sites failed", site.name)
