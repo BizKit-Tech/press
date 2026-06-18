@@ -391,16 +391,16 @@ export default {
 				},
 				{
 					label: 'Takedown Date',
-					value: this.$site.doc?.takedown_date || (this.$team?.doc?.is_desk_user ? '' : 'Not set'),
+					value: this.$site.doc?.takedown_date || 'Not set',
 					suffix: !this.$site.doc?.takedown_date && this.$team?.doc?.is_desk_user
 						? h(Button, {
-								variant: 'outline',
+								variant: 'subtle',
 								size: 'sm',
 								onClick: this.showSetTakedownDateDialog
 							}, () => 'Set')
 						: this.$site.doc?.takedown_date && this.$team?.doc?.is_desk_user
 						? h(Button, {
-								variant: 'ghost',
+								variant: 'subtle',
 								size: 'sm',
 								onClick: this.showSetTakedownDateDialog
 							}, () => 'Change')
