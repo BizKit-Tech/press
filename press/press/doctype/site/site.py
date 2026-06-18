@@ -2837,7 +2837,7 @@ class Site(Document, TagHelpers):
 
 		return [d for d in actions if d.get("condition", True)]
 
-	@frappe.whitelist()
+	@dashboard_whitelist()
 	def set_takedown_date(self, date=None):
 		frappe.only_for("System Manager")
 		environment = frappe.db.get_value("Server", self.server, "environment")
