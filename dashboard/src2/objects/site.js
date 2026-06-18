@@ -1375,13 +1375,13 @@ export default {
 										{
 											label: 'Takedown Date',
 											fieldname: 'takedown_date',
-											fieldtype: 'Date',
+											type: 'date',
+											default: site.doc.takedown_date || '',
 											description:
 												'The site will be suspended on this date. Leave empty to remove the scheduled takedown.'
 										}
 									],
-									initialValues: { takedown_date: site.doc.takedown_date || '' },
-									onSuccess({ data: values }) {
+									onSuccess({ values }) {
 										site.setTakedownDate.submit({ date: values.takedown_date || null });
 									}
 								});
