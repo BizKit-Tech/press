@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils import add_to_date, today
+from frappe.utils import add_to_date, get_url, today
 from press.api.bizkit_site import force_delete
 
 
@@ -73,15 +73,26 @@ def notify_upcoming_takedowns():
 	for site in sites:
 		try:
 			archive_date = add_to_date(site.takedown_date, days=grace_period)
-			body = (
-				f"Your site {site.name} is scheduled to be suspended on {site.takedown_date}. "
-				f"It will be permanently deleted on {archive_date}."
+			site_url = get_url(f"/dashboard/sites/{site.name}")
+			notification_body = (
+				f"Your site {site.name} is scheduled to be suspended on {site.takedown_date} "
+				f"and will be permanently deleted on {archive_date}. "
+				f"To extend the takedown date, visit the site dashboard: {site_url}"
 			)
-			_create_notification(site.team, site.name, "Site Scheduled for Suspension", body)
+			email_body = (
+				f"Your site <strong>{site.name}</strong> is scheduled to be suspended on "
+				f"<strong>{site.takedown_date}</strong> and will be permanently deleted on "
+				f"<strong>{archive_date}</strong>.<br><br>"
+				f"If you need more time, a System Manager can extend the takedown date from the "
+				f"<a href='{site_url}'>site dashboard</a> using the <em>Set Takedown Date</em> action.<br><br>"
+				f"<strong>Please note:</strong> Keeping this site running beyond its scheduled takedown "
+				f"date incurs additional infrastructure costs. Any extension must be approved before proceeding."
+			)
+			_create_notification(site.team, site.name, "Site Scheduled for Suspension", notification_body)
 			_send_email(
 				_get_email_recipients(site.name),
 				f"[Press] Site {site.name} scheduled for suspension on {site.takedown_date}",
-				body,
+				email_body,
 			)
 		except Exception:
 			frappe.log_error("Temporary Site: notify_upcoming_takedowns failed", site.name)
