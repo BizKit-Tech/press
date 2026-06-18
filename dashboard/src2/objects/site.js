@@ -1363,31 +1363,6 @@ export default {
 							}
 						},
 						{
-							label: 'Set Takedown Date',
-							icon: 'calendar',
-							condition: () =>
-								$team.doc?.is_desk_user &&
-								['Development', 'Demo'].includes(site.doc?.environment),
-							onClick() {
-								confirmDialog({
-									title: 'Set Takedown Date',
-									fields: [
-										{
-											label: 'Takedown Date',
-											fieldname: 'takedown_date',
-											type: 'date',
-											default: site.doc.takedown_date || '',
-											description:
-												'The site will be suspended on this date. Leave empty to remove the scheduled takedown.'
-										}
-									],
-									onSuccess({ values }) {
-										site.setTakedownDate.submit({ date: values.takedown_date || null });
-									}
-								});
-							}
-						},
-						{
 							label: 'Login As Administrator',
 							icon: 'external-link',
 							condition: () => site.doc.status === 'Active',
