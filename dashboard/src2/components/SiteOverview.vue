@@ -260,7 +260,7 @@ import { toast } from 'vue-sonner';
 import InfoIcon from '~icons/lucide/info';
 import DismissableBanner from './DismissableBanner.vue';
 import { getToastErrorMessage } from '../utils/toast';
-import { renderDialog } from '../utils/components';
+import { confirmDialog, renderDialog } from '../utils/components';
 import SiteDailyUsage from './SiteDailyUsage.vue';
 import AlertBanner from './AlertBanner.vue';
 import { trialDays } from '../utils/site';
@@ -323,6 +323,28 @@ export default {
 			);
 			renderDialog(h(TagsDialog, { doctype: 'Site', docname: this.site }));
 		},
+		showSetTakedownDateDialog() {
+			confirmDialog({
+				title: 'Set Takedown Date',
+				fields: [
+					{
+						label: 'Takedown Date',
+						fieldname: 'takedown_date',
+						fieldtype: 'Date',
+						description:
+							'The site will be suspended on this date. Leave empty to remove the scheduled takedown.'
+					}
+				],
+				initialValues: {
+					takedown_date: this.$site.doc.takedown_date || ''
+				},
+				onSuccess: ({ data: values }) => {
+					this.$site.setTakedownDate.submit({
+						date: values.takedown_date || null
+					});
+				}
+			});
+		},
 		trialDays
 	},
 	computed: {
@@ -368,6 +390,23 @@ export default {
 							target: '_blank'
 						}
 					)
+				},
+				{
+					label: 'Takedown Date',
+					value: this.$site.doc?.takedown_date || (this.$team?.doc?.is_desk_user ? '' : 'Not set'),
+					suffix: !this.$site.doc?.takedown_date && this.$team?.doc?.is_desk_user
+						? h(Button, {
+								variant: 'outline',
+								size: 'sm',
+								onClick: this.showSetTakedownDateDialog
+							}, () => 'Set')
+						: this.$site.doc?.takedown_date && this.$team?.doc?.is_desk_user
+						? h(Button, {
+								variant: 'ghost',
+								size: 'sm',
+								onClick: this.showSetTakedownDateDialog
+							}, () => 'Change')
+						: null
 				}
 			];
 		},
