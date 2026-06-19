@@ -193,8 +193,8 @@
   "telegram_alerts_chat_group",
   "maintenance_section",
   "server_manager_role",
-  "temporary_site_grace_period_days",
   "temporary_site_warning_days",
+  "temporary_site_grace_period_days",
   "feature_flags_tab",
   "verify_cards_with_micro_charge",
   "enable_google_oauth",
@@ -1352,12 +1352,14 @@
   },
   {
    "default": "7",
+   "description": "Number of days after the site takedown date before a suspended temporary site is permanently deleted",
    "fieldname": "temporary_site_grace_period_days",
    "fieldtype": "Int",
    "label": "Temporary Site Grace Period (Days)"
   },
   {
    "default": "3",
+   "description": "Number of days before the site takedown date to send a suspension warning notification",
    "fieldname": "temporary_site_warning_days",
    "fieldtype": "Int",
    "label": "Temporary Site Warning Days"
@@ -1365,7 +1367,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-04-07 19:02:13.302422",
+ "modified": "2026-06-19 19:45:24.443315",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Press Settings",
