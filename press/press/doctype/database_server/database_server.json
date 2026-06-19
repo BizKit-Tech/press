@@ -20,6 +20,7 @@
   "is_server_prepared",
   "is_server_renamed",
   "public",
+  "allow_auto_delete",
   "instance_details_sb",
   "instance_type",
   "column_break_blsz",
@@ -94,8 +95,7 @@
   "column_break_objb",
   "stalk_interval",
   "stalk_cycles",
-  "stalk_sleep",
-  "allow_auto_delete"
+  "stalk_sleep"
  ],
  "fields": [
   {
@@ -501,6 +501,7 @@
   },
   {
    "default": "1",
+   "description": "Allow automatic deletion during temporary site teardown. Disabled automatically when a Production server is linked.",
    "fieldname": "allow_auto_delete",
    "fieldtype": "Check",
    "label": "Allow Auto Delete"
@@ -648,7 +649,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-30 21:02:44.163676",
+ "modified": "2026-06-19 19:28:07.582721",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Database Server",

@@ -32,6 +32,7 @@ class DatabaseServer(BaseServer):
 		from press.press.doctype.server_mount.server_mount import ServerMount
 
 		agent_password: DF.Password | None
+		allow_auto_delete: DF.Check
 		auto_add_storage_max: DF.Int
 		auto_add_storage_min: DF.Int
 		backup_retention_period: DF.Int
