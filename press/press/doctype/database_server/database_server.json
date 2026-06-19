@@ -94,7 +94,8 @@
   "column_break_objb",
   "stalk_interval",
   "stalk_cycles",
-  "stalk_sleep"
+  "stalk_sleep",
+  "allow_auto_delete"
  ],
  "fields": [
   {
@@ -497,6 +498,12 @@
    "fieldname": "stalk_sleep",
    "fieldtype": "Int",
    "label": "Stalk Sleep"
+  },
+  {
+   "default": "1",
+   "fieldname": "allow_auto_delete",
+   "fieldtype": "Check",
+   "label": "Allow Auto Delete"
   },
   {
    "default": "0",

@@ -178,6 +178,13 @@ def teardown_temporary_site(site_doc):
 	remaining = frappe.db.count("Server", {"cluster": cluster_name, "status": ("!=", "Archived")})
 	if remaining == 0 and db_server_name:
 		db_doc = frappe.get_doc("Database Server", db_server_name)
+		if not db_doc.allow_auto_delete:
+			db_doc.add_comment(
+				"Comment",
+				f"Temporary site teardown skipped auto-deletion of this Database Server because "
+				f"allow_auto_delete is disabled. Manual cleanup required."
+			)
+			return
 		db_doc.disable_termination_protection()
 		db_doc.terminate_instance()
 		force_delete("Database Server", db_server_name)

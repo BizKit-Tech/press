@@ -1384,6 +1384,9 @@ class Server(BaseServer):
 			if database_server_public != self.public:
 				frappe.db.set_value("Database Server", self.database_server, "public", self.public)
 
+			if self.environment == "Production":
+				frappe.db.set_value("Database Server", self.database_server, "allow_auto_delete", 0)
+
 		if not self.is_new() and self.has_value_changed("team"):
 			self.update_subscription()
 			frappe.db.delete("Press Role Permission", {"server": self.name})
