@@ -1,4 +1,13 @@
 ---
+- name: Disable RDS deletion protection
+  amazon.aws.rds_instance:
+    aws_access_key: '{{ ec2_access_key }}'
+    aws_secret_key: '{{ ec2_secret_key }}'
+    db_instance_identifier: '{{ instance_abbr }}-db'
+    state: present
+    deletion_protection: false
+    region: ap-southeast-1
+
 - name: Delete RDS instance
   amazon.aws.rds_instance:
     aws_access_key: '{{ ec2_access_key }}'
@@ -7,7 +16,6 @@
     state: absent
     skip_final_snapshot: true
     region: ap-southeast-1
-  ignore_errors: true
 
 - name: Delete RDS subnet group
   amazon.aws.rds_subnet_group:
@@ -16,7 +24,6 @@
     name: '{{ instance_abbr }}-db'
     state: absent
     region: ap-southeast-1
-  ignore_errors: true
 
 - name: Delete RDS security group
   amazon.aws.ec2_security_group:
@@ -26,4 +33,3 @@
     state: absent
     region: ap-southeast-1
   when: security_group_id | length > 0
-  ignore_errors: true
