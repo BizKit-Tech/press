@@ -886,6 +886,12 @@ class Cluster(Document):
 				self.subnet_2_cidr_block = "10.0.1.0/24"
 			else:
 				self.status = "Pending"
+				failed_tasks = frappe.get_all(
+					"Ansible Task",
+					filters={"play": play.name, "status": "Failure"},
+					fields=["task", "error", "exception"],
+				)
+				log_error("VPC Setup Error", server=self.name, tasks=failed_tasks)
 		except Exception:
 			self.status = "Pending"
 			log_error("VPC Setup Exception", server=self.as_dict())
@@ -914,6 +920,11 @@ class Cluster(Document):
 			)
 			play = ansible.run()
 			if play.status != "Success":
-				log_error("VPC Deletion Failed", server=self.as_dict())
+				failed_tasks = frappe.get_all(
+					"Ansible Task",
+					filters={"play": play.name, "status": "Failure"},
+					fields=["task", "error", "exception"],
+				)
+				log_error("VPC Deletion Error", server=self.name, tasks=failed_tasks)
 		except Exception:
 			log_error("VPC Deletion Exception", server=self.as_dict())
