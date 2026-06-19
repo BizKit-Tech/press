@@ -84,7 +84,7 @@ def notify_upcoming_takedowns():
 				f"<strong>{site.takedown_date}</strong> and will be permanently deleted on "
 				f"<strong>{archive_date}</strong>.<br><br>"
 				f"If you need more time, a System Manager can extend the takedown date from the "
-				f"<a href='{site_url}'>site dashboard</a> using the <em>Set Takedown Date</em> action.<br><br>"
+				f"<strong><a href='{site_url}'>site dashboard</a></strong> using the <em>Set Takedown Date</em> action.<br><br>"
 				f"<strong>Please note:</strong> Keeping this site running beyond its scheduled takedown "
 				f"date incurs additional infrastructure costs. Any extension must be approved before proceeding."
 			)
