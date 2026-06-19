@@ -1557,6 +1557,12 @@ class Server(BaseServer):
 				self.security_group = instance["security_groups"][0]["group_id"]
 			else:
 				self.status = "Broken"
+				failed_tasks = frappe.get_all(
+					"Ansible Task",
+					filters={"play": play.name, "status": "Failure"},
+					fields=["task", "error", "exception"],
+				)
+				log_error("Server Setup Error", server=self.name, tasks=failed_tasks)
 		except Exception:
 			self.status = "Broken"
 			log_error("Server Setup Exception", server=self.as_dict())
@@ -1610,7 +1616,12 @@ class Server(BaseServer):
 				db_doc.security_group = db_doc.security_group + f',{task_result["group_id"]}'
 				db_doc.save()
 			else:
-				log_error("EC2 to RDS Connection Exception", server=self.as_dict())
+				failed_tasks = frappe.get_all(
+					"Ansible Task",
+					filters={"play": play.name, "status": "Failure"},
+					fields=["task", "error", "exception"],
+				)
+				log_error("EC2 to RDS Connection Error", server=self.name, tasks=failed_tasks)
 		except Exception:
 			log_error("EC2 to RDS Connection Exception", server=self.as_dict())
 		self.save()
@@ -2177,7 +2188,12 @@ class Server(BaseServer):
 					"Database Server", self.database_server, "security_group", rds_security_groups.join(",")
 				)
 			else:
-				log_error("Instance Termination Failed", server=self.as_dict())
+				failed_tasks = frappe.get_all(
+					"Ansible Task",
+					filters={"play": play.name, "status": "Failure"},
+					fields=["task", "error", "exception"],
+				)
+				log_error("Instance Termination Error", server=self.name, tasks=failed_tasks)
 		except Exception:
 			log_error("Instance Termination Exception", server=self.as_dict())
 		self.save()
