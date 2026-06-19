@@ -182,6 +182,7 @@ class Site(Document, TagHelpers):
 		status_before_update: DF.Data | None
 		subdomain: DF.Data
 		tags: DF.Table[ResourceTag]
+		takedown_date: DF.Date | None
 		team: DF.Link
 		tenancy: DF.Literal["Dedicated", "Shared"]
 		timezone: DF.Data | None
