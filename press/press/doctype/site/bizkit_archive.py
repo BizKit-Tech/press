@@ -185,7 +185,6 @@ def teardown_temporary_site(site_doc):
 				f"allow_auto_delete is disabled. Manual cleanup required."
 			)
 			return
-		db_doc.disable_termination_protection()
 		db_doc.terminate_instance()
 		force_delete("Database Server", db_server_name)
 
