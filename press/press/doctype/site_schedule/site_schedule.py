@@ -16,3 +16,4 @@ class SiteSchedule(Document):
 		override: DF.Literal["None", "Until Datetime", "Indefinite"]
 		override_until: DF.Datetime | None
 	# end: auto-generated types
+
