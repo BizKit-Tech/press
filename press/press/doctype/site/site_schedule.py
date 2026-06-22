@@ -30,7 +30,7 @@ def _process_schedule(schedule):
         return
 
     server = frappe.db.get_value(
-        "Server", site.server, ["environment", "status"], as_dict=True
+        "Server", site.server, ["environment", "status", "instance_state"], as_dict=True
     )
     if not server or server.environment not in ("Development", "Demo"):
         return
@@ -47,7 +47,7 @@ def _process_schedule(schedule):
         frappe.db.commit()
 
     desired_up = _should_be_up(schedule, local_now, on_override_clear)
-    actual_up = server.status == "Active"
+    actual_up = server.instance_state == "Running"
 
     if desired_up and not actual_up:
         frappe.get_doc("Server", site.server).start_instance()

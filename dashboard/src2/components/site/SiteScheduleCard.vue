@@ -76,6 +76,7 @@ import { toast } from 'vue-sonner';
 import { confirmDialog } from '../../utils/components';
 import { getToastErrorMessage } from '../../utils/toast';
 import dayjs from '../../utils/dayjs';
+import { getTeam } from '../../data/team';
 
 export default {
 	name: 'SiteScheduleCard',
@@ -217,6 +218,9 @@ export default {
 	computed: {
 		$site() {
 			return getCachedDocumentResource('Site', this.site);
+		},
+		$team() {
+			return getTeam();
 		},
 		presetSummary() {
 			const p = this.schedule?.preset_doc;
