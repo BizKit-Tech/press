@@ -1,6 +1,7 @@
 [
   {
     "doctype": "Site Schedule Preset",
+    "name": "Business Hours",
     "preset_name": "Business Hours",
     "monday": 1, "tuesday": 1, "wednesday": 1, "thursday": 1, "friday": 1,
     "saturday": 0, "sunday": 0,
@@ -10,6 +11,7 @@
   },
   {
     "doctype": "Site Schedule Preset",
+    "name": "Development Hours",
     "preset_name": "Development Hours",
     "monday": 1, "tuesday": 1, "wednesday": 1, "thursday": 1, "friday": 1,
     "saturday": 0, "sunday": 0,
@@ -19,6 +21,7 @@
   },
   {
     "doctype": "Site Schedule Preset",
+    "name": "Weekdays Only",
     "preset_name": "Weekdays Only",
     "monday": 1, "tuesday": 1, "wednesday": 1, "thursday": 1, "friday": 1,
     "saturday": 0, "sunday": 0,
@@ -28,6 +31,7 @@
   },
   {
     "doctype": "Site Schedule Preset",
+    "name": "Always On",
     "preset_name": "Always On",
     "monday": 1, "tuesday": 1, "wednesday": 1, "thursday": 1, "friday": 1,
     "saturday": 1, "sunday": 1,
