@@ -69,7 +69,11 @@ export default {
 		lock: 'lock_for_protection',
 		dropSite: 'drop_site',
 		updateSite: 'update_site',
-		setTakedownDate: 'set_takedown_date'
+		setTakedownDate: 'set_takedown_date',
+		setSchedule: 'set_schedule',
+		disableSchedule: 'disable_schedule',
+		setScheduleOverride: 'set_schedule_override',
+		getSchedule: 'get_schedule'
 	},
 	list: {
 		route: '/sites',
