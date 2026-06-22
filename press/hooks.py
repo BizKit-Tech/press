@@ -322,6 +322,7 @@ fixtures = [
 	"Bench Dependency",
 	"Server Storage Plan",
 	"Press Webhook Event",
+	"Site Schedule Preset",
 ]
 # Testing
 # -------
