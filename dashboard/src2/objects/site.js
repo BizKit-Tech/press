@@ -68,7 +68,8 @@ export default {
 		unlock: 'unlock_for_termination',
 		lock: 'lock_for_protection',
 		dropSite: 'drop_site',
-		updateSite: 'update_site'
+		updateSite: 'update_site',
+		setTakedownDate: 'set_takedown_date'
 	},
 	list: {
 		route: '/sites',

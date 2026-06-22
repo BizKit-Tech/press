@@ -182,6 +182,7 @@ class Site(Document, TagHelpers):
 		status_before_update: DF.Data | None
 		subdomain: DF.Data
 		tags: DF.Table[ResourceTag]
+		takedown_date: DF.Date | None
 		team: DF.Link
 		tenancy: DF.Literal["Dedicated", "Shared"]
 		timezone: DF.Data | None
@@ -220,7 +221,8 @@ class Site(Document, TagHelpers):
 		"update_trigger_time",
 		"additional_system_user_created",
 		"domain",
-		"site_url"
+		"site_url",
+		"takedown_date"
 	)
 
 	@staticmethod
@@ -286,11 +288,12 @@ class Site(Document, TagHelpers):
 		)
 		doc.update_information = self.get_update_information()
 		doc.actions = self.get_actions()
-		server = frappe.get_value("Server", self.server, ["ip", "proxy_server", "team", "title"], as_dict=1)
+		server = frappe.get_value("Server", self.server, ["ip", "proxy_server", "team", "title", "environment"], as_dict=1)
 		doc.cluster = frappe.db.get_value("Cluster", self.cluster, ["title", "image"], as_dict=1)
 		doc.outbound_ip = server.ip
 		doc.server_team = server.team
 		doc.server_title = server.title
+		doc.environment = server.environment
 		doc.inbound_ip = self.inbound_ip
 		doc.is_dedicated_server = is_dedicated_server(self.server)
 
@@ -2834,6 +2837,15 @@ class Site(Document, TagHelpers):
 		'''
 
 		return [d for d in actions if d.get("condition", True)]
+
+	@dashboard_whitelist()
+	def set_takedown_date(self, date=None):
+		frappe.only_for("System Manager")
+		environment = frappe.db.get_value("Server", self.server, "environment")
+		if date and environment == "Production":
+			frappe.throw("Temporary sites are not allowed for Production environments")
+		self.takedown_date = date
+		self.save(ignore_permissions=True)
 
 	@property
 	def hybrid_site(self) -> bool:

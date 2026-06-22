@@ -32,6 +32,7 @@ class DatabaseServer(BaseServer):
 		from press.press.doctype.server_mount.server_mount import ServerMount
 
 		agent_password: DF.Password | None
+		allow_auto_delete: DF.Check
 		auto_add_storage_max: DF.Int
 		auto_add_storage_min: DF.Int
 		backup_retention_period: DF.Int
@@ -403,6 +404,12 @@ class DatabaseServer(BaseServer):
 				self.process_hybrid_server_setup()
 			else:
 				self.status = "Broken"
+				failed_tasks = frappe.get_all(
+					"Ansible Task",
+					filters={"play": play.name, "status": "Failure"},
+					fields=["task", "error", "exception"],
+				)
+				log_error("Database Server Setup Error", server=self.name, tasks=failed_tasks)
 		except Exception:
 			self.status = "Broken"
 			log_error("Database Server Setup Exception", server=self.as_dict())

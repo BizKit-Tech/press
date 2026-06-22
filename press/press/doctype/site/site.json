@@ -24,6 +24,7 @@
   "cluster",
   "admin_password",
   "additional_system_user_created",
+  "takedown_date",
   "config_tab",
   "hide_config",
   "host_name",
@@ -645,6 +646,12 @@
    "read_only": 1
   },
   {
+   "description": "Date this site will be automatically suspended. Only applies to Development and Demo environments. Leave empty for no scheduled takedown.",
+   "fieldname": "takedown_date",
+   "fieldtype": "Date",
+   "label": "Takedown Date"
+  },
+  {
    "depends_on": "eval:doc.update_trigger_frequency === 'Every 2 Weeks'",
    "fieldname": "update_start_date",
    "fieldtype": "Date",
@@ -737,7 +744,7 @@
    "link_fieldname": "site"
   }
  ],
- "modified": "2025-12-05 19:16:24.163152",
+ "modified": "2026-06-19 19:42:49.994446",
  "modified_by": "Administrator",
  "module": "Press",
  "name": "Site",

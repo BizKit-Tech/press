@@ -42,6 +42,11 @@ def _new(args):
     site_plan = args.get("site_plan")
     backup = args.get("backup")
 
+    takedown_date = args.get("takedown_date")
+
+    if takedown_date and environment == "Production":
+        frappe.throw("Temporary sites are not allowed for Production environments")
+
     team = frappe.db.get_value("Team", {"team_title": "DevOps"}, "name")
     site_plan_details = get_site_plan_details(site_plan)
     domain = frappe.db.get_value("Root Domain", {"environment": environment}, "name")
@@ -81,7 +86,7 @@ def _new(args):
         created["bench"] = bench
 
         print("Creating site")
-        site = create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan, backup)
+        site = create_site(company_name, company_name_abbr, bench, product, tenancy, release_group, cluster, app_server, project_name, team, domain, site_plan, backup, takedown_date)
         created["site"] = site.name
 
         create_notification({
@@ -322,7 +327,7 @@ def create_deploy_candidate(release_group):
     return deploy_candidate.name
 
 
-def create_site(company_name, company_name_abbr, bench_name, product, tenancy, release_group, cluster_name, app_server_name, project_name, team, domain, site_plan, backup):
+def create_site(company_name, company_name_abbr, bench_name, product, tenancy, release_group, cluster_name, app_server_name, project_name, team, domain, site_plan, backup, takedown_date=None):
     bench_doc = frappe.get_doc("Bench", bench_name)
     bench_apps = [{"app": app.app} for app in bench_doc.apps]
 
@@ -346,6 +351,7 @@ def create_site(company_name, company_name_abbr, bench_name, product, tenancy, r
         "apps": bench_apps,
         "plan": site_plan,
         "restored_from_backup": backup,
+        "takedown_date": takedown_date,
     })
     site_doc.insert()
     frappe.db.commit()

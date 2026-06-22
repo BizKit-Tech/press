@@ -448,6 +448,17 @@
 					</div>
 				</div>
 			</div>
+			<div v-if="plan && cluster && ['Development', 'Demo'].includes(environment)">
+				<div class="text-sm font-medium text-gray-700 mb-1">Takedown Date (Optional)</div>
+				<FormControl
+					type="date"
+					v-model="takedownDate"
+					placeholder="No automatic takedown"
+				/>
+				<p class="text-xs text-gray-500 mt-1">
+					If set, the site will be suspended on this date and permanently deleted after the grace period.
+				</p>
+			</div>
 			<Summary
 				v-if="cluster && plan && companyName"
 				:options="siteSummaryOptions"
@@ -540,6 +551,7 @@ export default {
 			companyNameAbbr: '',
 			showModal: false,
 			backup: this.backup,
+			takedownDate: null,
 		};
 	},
 	watch: {
@@ -585,8 +597,11 @@ export default {
 		closestCluster() {
 			this.cluster = this.closestCluster;
 		},
-		environment() {
-			this.tenancy = this.getDefaultTenancy(this.environment);
+		environment(val) {
+			this.tenancy = this.getDefaultTenancy(val);
+			if (val === 'Production') {
+				this.takedownDate = null;
+			}
 		},
 		projectName: {
 			handler: debounce(function (value) {
@@ -686,6 +701,7 @@ export default {
 							tenancy: this.tenancy,
 							site_plan: this.plan.name,
 							backup: this.backup,
+							takedown_date: this.takedownDate || null,
 						}
 					};
 				},
@@ -974,8 +990,12 @@ export default {
 					label: 'Total',
 					value: `${this.totalPerMonth} per month <div class="text-gray-600">${this.totalPerDay} per day</div>`,
 					condition: () => this._totalPerMonth
+				},
+				this.takedownDate && {
+					label: 'Takedown Date',
+					value: this.takedownDate,
 				}
-			];
+			].filter(Boolean);
 		}
 	},
 	methods: {

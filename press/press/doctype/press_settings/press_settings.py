@@ -144,6 +144,8 @@ class PressSettings(Document):
 		telegram_alerts_chat_group: DF.Link | None
 		telegram_bot_token: DF.Data | None
 		telegram_chat_id: DF.Data | None
+		temporary_site_grace_period_days: DF.Int
+		temporary_site_warning_days: DF.Int
 		threshold: DF.Float
 		tls_renewal_queue_size: DF.Int
 		trial_sites_count: DF.Int
