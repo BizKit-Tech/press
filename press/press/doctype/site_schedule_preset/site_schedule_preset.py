@@ -22,3 +22,17 @@ class SiteSchedulePreset(Document):
 		start_time: DF.Time | None
 		stop_time: DF.Time | None
 	# end: auto-generated types
+
+	dashboard_fields = (
+		"preset_name",
+		"monday",
+		"tuesday",
+		"wednesday",
+		"thursday",
+		"friday",
+		"saturday",
+		"sunday",
+		"all_day",
+		"start_time",
+		"stop_time",
+	)
