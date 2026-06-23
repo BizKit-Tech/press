@@ -80,12 +80,11 @@
 				</div>
 			</div>
 		</div>
+		<SiteDailyUsage :site="site" />
 		<SiteScheduleCard
 			v-if="isSchedulable"
 			:site="site"
-			class="col-span-1 lg:col-span-2"
 		/>
-		<SiteDailyUsage :site="site" />
 		<div class="col-span-1 rounded-md border lg:col-span-2">
 			<div class="grid grid-cols-2 lg:grid-cols-4">
 				<div class="border-b border-r p-5 lg:border-b-0">
