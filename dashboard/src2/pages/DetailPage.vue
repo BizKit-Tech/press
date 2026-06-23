@@ -3,18 +3,21 @@
 		<div class="w-full sm:flex sm:items-center sm:justify-between">
 			<div class="flex items-center space-x-2">
 				<FBreadcrumbs :items="breadcrumbs" />
-				<Badge
-					class="hidden sm:inline-flex"
-					v-if="$resources.document?.doc && badge"
-					v-bind="badge"
-				/>
+				<template v-if="$resources.document?.doc && badges.length">
+					<Badge
+						v-for="b in badges"
+						:key="b.label"
+						class="hidden sm:inline-flex"
+						v-bind="b"
+					/>
+				</template>
 			</div>
 			<div
 				class="mt-1 flex items-center justify-between space-x-2 sm:mt-0"
 				v-if="$resources.document?.doc"
 			>
-				<div class="sm:hidden">
-					<Badge v-if="$resources.document?.doc && badge" v-bind="badge" />
+				<div class="sm:hidden flex items-center space-x-1">
+					<Badge v-for="b in badges" :key="b.label" v-bind="b" />
 				</div>
 				<div class="space-x-2">
 					<ActionButton
@@ -134,13 +137,12 @@ export default {
 			let doc = this.$resources.document?.doc;
 			return doc ? doc[this.object.detail.titleField || 'name'] : this.name;
 		},
-		badge() {
-			if (this.object.detail.statusBadge) {
-				return this.object.detail.statusBadge({
-					documentResource: this.$resources.document
-				});
-			}
-			return null;
+		badges() {
+			if (!this.object.detail.statusBadge) return [];
+			const result = this.object.detail.statusBadge({
+				documentResource: this.$resources.document
+			});
+			return (Array.isArray(result) ? result : [result]).filter(b => b?.label);
 		},
 		actions() {
 			if (this.object.detail.actions && this.$resources.document?.doc) {

@@ -288,12 +288,13 @@ class Site(Document, TagHelpers):
 		)
 		doc.update_information = self.get_update_information()
 		doc.actions = self.get_actions()
-		server = frappe.get_value("Server", self.server, ["ip", "proxy_server", "team", "title", "environment"], as_dict=1)
+		server = frappe.get_value("Server", self.server, ["ip", "proxy_server", "team", "title", "environment", "instance_state"], as_dict=1)
 		doc.cluster = frappe.db.get_value("Cluster", self.cluster, ["title", "image"], as_dict=1)
 		doc.outbound_ip = server.ip
 		doc.server_team = server.team
 		doc.server_title = server.title
 		doc.environment = server.environment
+		doc.server_instance_state = server.instance_state
 		doc.inbound_ip = self.inbound_ip
 		doc.is_dedicated_server = is_dedicated_server(self.server)
 
