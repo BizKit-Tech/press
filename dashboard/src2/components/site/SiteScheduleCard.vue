@@ -26,6 +26,9 @@
 			<template v-if="!schedule">
 				<p class="text-sm text-gray-500">No schedule configured. Site runs 24/7.</p>
 			</template>
+			<template v-else-if="!schedule.enabled">
+				<p class="text-sm text-gray-500">Schedule is disabled. Site runs 24/7.</p>
+			</template>
 			<template v-else>
 				<div class="flex items-start justify-between">
 					<div>
