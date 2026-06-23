@@ -89,7 +89,7 @@ export default {
 				url: 'press.api.client.get_list',
 				params: {
 					doctype: 'Site Schedule Preset',
-					fields: ['preset_name'],
+					fields: ['preset_name', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'all_day', 'start_time', 'stop_time'],
 					limit: 50,
 				},
 				auto: true,
@@ -105,21 +105,22 @@ export default {
 			this.schedule = result;
 		},
 		showSetScheduleDialog(currentPreset = null) {
-			const presets = (this.presetsResource.data || []).map(p => p.preset_name);
 			confirmDialog({
 				title: currentPreset ? 'Change Schedule Preset' : 'Set Instance Schedule',
 				fields: [
 					{
 						label: 'Preset',
 						fieldname: 'preset',
-						fieldtype: 'Select',
-						options: presets.join('\n'),
-						default: currentPreset || presets[0] || '',
+						type: 'autocomplete',
+						options: this.presetOptions,
+						default: currentPreset || (this.presetOptions[0]?.value ?? ''),
 					},
 				],
 				onSuccess: ({ values }) => {
+					const preset = values.preset?.value ?? values.preset;
+					if (!preset) return;
 					toast.promise(
-						this.$site.setSchedule.submit({ preset: values.preset }),
+						this.$site.setSchedule.submit({ preset }),
 						{
 							loading: 'Saving schedule...',
 							success: () => {
@@ -201,6 +202,21 @@ export default {
 				}
 			);
 		},
+		_presetDescription(p) {
+			if (!p) return '';
+			const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+			const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+			const activeDays = days.map((d, i) => (p[d] ? dayLabels[i] : null)).filter(Boolean);
+			const dayStr = activeDays.join(', ');
+			if (p.all_day) return `${dayStr} · All day`;
+			const fmt = t => {
+				if (!t) return '';
+				const [h, m] = String(t).split(':');
+				const hour = parseInt(h);
+				return `${hour % 12 || 12}:${m}${hour >= 12 ? 'pm' : 'am'}`;
+			};
+			return `${dayStr} · ${fmt(p.start_time)} – ${fmt(p.stop_time)}`;
+		},
 		cancelOverride() {
 			toast.promise(
 				this.$site.setScheduleOverride.submit({ override_type: 'None' }),
@@ -222,27 +238,15 @@ export default {
 		$team() {
 			return getTeam();
 		},
+		presetOptions() {
+			return (this.presetsResource.data || []).map(p => ({
+				label: p.preset_name,
+				description: this._presetDescription(p),
+				value: p.preset_name,
+			}));
+		},
 		presetSummary() {
-			const p = this.schedule?.preset_doc;
-			if (!p) return '';
-			const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-			const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-			const activeDays = days
-				.map((d, i) => (p[d] ? dayLabels[i] : null))
-				.filter(Boolean);
-
-			const dayStr = activeDays.join(', ');
-			if (p.all_day) return `${dayStr} · All day`;
-
-			const fmt = t => {
-				if (!t) return '';
-				const [h, m] = String(t).split(':');
-				const hour = parseInt(h);
-				const suffix = hour >= 12 ? 'pm' : 'am';
-				const displayHour = hour % 12 || 12;
-				return `${displayHour}:${m}${suffix}`;
-			};
-			return `${dayStr} · ${fmt(p.start_time)} – ${fmt(p.stop_time)}`;
+			return this._presetDescription(this.schedule?.preset_doc);
 		},
 		formattedOverrideUntil() {
 			if (!this.schedule?.override_until) return '';
