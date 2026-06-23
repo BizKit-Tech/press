@@ -167,7 +167,7 @@ export default {
 					{
 						label: 'Keep running until',
 						fieldname: 'override_until',
-						fieldtype: 'Datetime',
+						type: 'datetime-local',
 					},
 				],
 				onSuccess: ({ values }) => {
