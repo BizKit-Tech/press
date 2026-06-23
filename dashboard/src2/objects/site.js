@@ -73,7 +73,8 @@ export default {
 		setSchedule: 'set_schedule',
 		disableSchedule: 'disable_schedule',
 		setScheduleOverride: 'set_schedule_override',
-		getSchedule: 'get_schedule'
+		getSchedule: 'get_schedule',
+		clearSchedule: 'clear_schedule'
 	},
 	list: {
 		route: '/sites',

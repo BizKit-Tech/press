@@ -205,6 +205,19 @@ export default {
 				}
 			);
 		},
+		clearSchedule() {
+			toast.promise(
+				this.$site.clearSchedule.submit({ schedule_name: this.schedule.name }),
+				{
+					loading: 'Clearing schedule...',
+					success: () => {
+						this.schedule = null;
+						return 'Schedule cleared';
+					},
+					error: e => getToastErrorMessage(e),
+				}
+			);
+		},
 		_presetDescription(p) {
 			if (!p) return '';
 			const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -274,11 +287,10 @@ export default {
 					onClick: () => this.showSetScheduleDialog(this.schedule?.preset),
 				},
 				{
-					label: 'Disable Schedule',
-					condition: () => this.schedule?.enabled,
-					onClick: () => this.toggleEnabled(),
+					label: 'Clear Schedule',
+					onClick: () => this.clearSchedule(),
 				},
-			].filter(o => (o.condition ? o.condition() : true));
+			];
 		},
 	},
 };

@@ -2874,6 +2874,10 @@ class Site(Document, TagHelpers):
 			frappe.db.set_value("Site Schedule", existing, "enabled", 0)
 
 	@dashboard_whitelist()
+	def clear_schedule(self, schedule_name):
+		frappe.delete_doc("Site Schedule", schedule_name, ignore_permissions=True)
+
+	@dashboard_whitelist()
 	def set_schedule_override(self, override_type, override_until=None):
 		if override_type not in ("None", "Until Datetime", "Indefinite"):
 			frappe.throw(f"Invalid override type: {override_type}")
