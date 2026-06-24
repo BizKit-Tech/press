@@ -150,17 +150,7 @@ export default {
 					}
 				);
 			} else {
-				toast.promise(
-					this.$site.setSchedule.submit({ preset: this.schedule.preset }),
-					{
-						loading: 'Enabling schedule...',
-						success: () => {
-							this.loadSchedule();
-							return 'Schedule enabled';
-						},
-						error: e => getToastErrorMessage(e),
-					}
-				);
+				this.showSetScheduleDialog(this.schedule?.preset);
 			}
 		},
 		showKeepRunningUntilDialog() {
