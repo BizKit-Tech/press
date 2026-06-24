@@ -1,0 +1,99 @@
+{
+  "actions": [],
+  "autoname": "field:preset_name",
+  "creation": "2026-06-22 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "preset_name",
+    "days_section",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "time_section",
+    "all_day",
+    "start_time",
+    "stop_time"
+  ],
+  "fields": [
+    {
+      "fieldname": "preset_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Preset Name",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "days_section",
+      "fieldtype": "Section Break",
+      "label": "Active Days"
+    },
+    {"fieldname": "monday",    "fieldtype": "Check", "label": "Monday"},
+    {"fieldname": "tuesday",   "fieldtype": "Check", "label": "Tuesday"},
+    {"fieldname": "wednesday", "fieldtype": "Check", "label": "Wednesday"},
+    {"fieldname": "thursday",  "fieldtype": "Check", "label": "Thursday"},
+    {"fieldname": "friday",    "fieldtype": "Check", "label": "Friday"},
+    {"fieldname": "saturday",  "fieldtype": "Check", "label": "Saturday"},
+    {"fieldname": "sunday",    "fieldtype": "Check", "label": "Sunday"},
+    {
+      "fieldname": "time_section",
+      "fieldtype": "Section Break",
+      "label": "Time Window"
+    },
+    {
+      "fieldname": "all_day",
+      "fieldtype": "Check",
+      "label": "All Day",
+      "description": "If checked, instance runs all day on active days. Start/stop time is ignored."
+    },
+    {
+      "depends_on": "eval:!doc.all_day",
+      "fieldname": "start_time",
+      "fieldtype": "Time",
+      "label": "Start Time"
+    },
+    {
+      "depends_on": "eval:!doc.all_day",
+      "fieldname": "stop_time",
+      "fieldtype": "Time",
+      "label": "Stop Time"
+    }
+  ],
+  "links": [],
+  "modified": "2026-06-22 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Press",
+  "name": "Site Schedule Preset",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Press Admin"
+    },
+    {
+      "read": 1,
+      "role": "Press Member"
+    }
+  ],
+  "sort_field": "preset_name",
+  "sort_order": "ASC",
+  "track_changes": 0
+}

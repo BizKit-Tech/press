@@ -283,6 +283,7 @@ scheduler_events = {
 		"*/30 * * * *": [
 			"press.press.doctype.site_update.scheduled_auto_updates.trigger",
 			"press.press.doctype.team.suspend_sites.execute",
+			"press.press.doctype.site.site_schedule.run_site_schedules",
 		],
 		"15,45 * * * *": [
 			"press.press.doctype.site.site_usages.update_cpu_usages",
@@ -322,6 +323,7 @@ fixtures = [
 	"Bench Dependency",
 	"Server Storage Plan",
 	"Press Webhook Event",
+	"Site Schedule Preset",
 ]
 # Testing
 # -------

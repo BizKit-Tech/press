@@ -81,6 +81,10 @@
 			</div>
 		</div>
 		<SiteDailyUsage :site="site" />
+		<SiteScheduleCard
+			v-if="isSchedulable"
+			:site="site"
+		/>
 		<div class="col-span-1 rounded-md border lg:col-span-2">
 			<div class="grid grid-cols-2 lg:grid-cols-4">
 				<div class="border-b border-r p-5 lg:border-b-0">
@@ -263,12 +267,13 @@ import { getToastErrorMessage } from '../utils/toast';
 import { confirmDialog, renderDialog } from '../utils/components';
 import SiteDailyUsage from './SiteDailyUsage.vue';
 import AlertBanner from './AlertBanner.vue';
+import SiteScheduleCard from './site/SiteScheduleCard.vue';
 import { trialDays } from '../utils/site';
 
 export default {
 	name: 'SiteOverview',
 	props: ['site'],
-	components: { SiteDailyUsage, Progress, AlertBanner, DismissableBanner },
+	components: { SiteDailyUsage, Progress, AlertBanner, DismissableBanner, SiteScheduleCard },
 	data() {
 		return {
 			isSetupWizardComplete: true
@@ -346,6 +351,9 @@ export default {
 		trialDays
 	},
 	computed: {
+		isSchedulable() {
+			return ['Development', 'Demo'].includes(this.$site.doc?.environment);
+		},
 		siteInformation() {
 			return [
 				{

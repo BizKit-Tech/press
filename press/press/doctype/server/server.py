@@ -38,6 +38,7 @@ class BaseServer(Document, TagHelpers):
 		"plan",
 		"cluster",
 		"status",
+		"instance_state",
 		"team",
 		"database_server",
 		"is_self_hosted",

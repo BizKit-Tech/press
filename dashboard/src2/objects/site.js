@@ -69,7 +69,12 @@ export default {
 		lock: 'lock_for_protection',
 		dropSite: 'drop_site',
 		updateSite: 'update_site',
-		setTakedownDate: 'set_takedown_date'
+		setTakedownDate: 'set_takedown_date',
+		setSchedule: 'set_schedule',
+		disableSchedule: 'disable_schedule',
+		setScheduleOverride: 'set_schedule_override',
+		getSchedule: 'get_schedule',
+		clearSchedule: 'clear_schedule'
 	},
 	list: {
 		route: '/sites',
@@ -84,7 +89,8 @@ export default {
 			'group.version as version',
 			'cluster.image as cluster_image',
 			'cluster.title as cluster_title',
-			'trial_end_date'
+			'trial_end_date',
+			'server.instance_state as server_instance_state'
 		],
 		orderBy: 'creation desc',
 		searchField: 'host_name',
@@ -142,6 +148,7 @@ export default {
 				}
 			},
 			{ label: 'Status', fieldname: 'status', type: 'Badge', width: '140px' },
+			{ label: 'Instance State', fieldname: 'server_instance_state', type: 'Badge', width: '140px' },
 			{
 				label: 'Plan',
 				fieldname: 'plan',
@@ -193,7 +200,10 @@ export default {
 		titleField: 'name',
 		route: '/sites/:name',
 		statusBadge({ documentResource: site }) {
-			return { label: site.doc.status };
+			return [
+				{ label: site.doc.status },
+				{ label: site.doc.server_instance_state }
+			];
 		},
 		breadcrumbs({ items, documentResource: site }) {
 			let breadcrumbs = [];

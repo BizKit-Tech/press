@@ -288,12 +288,13 @@ class Site(Document, TagHelpers):
 		)
 		doc.update_information = self.get_update_information()
 		doc.actions = self.get_actions()
-		server = frappe.get_value("Server", self.server, ["ip", "proxy_server", "team", "title", "environment"], as_dict=1)
+		server = frappe.get_value("Server", self.server, ["ip", "proxy_server", "team", "title", "environment", "instance_state"], as_dict=1)
 		doc.cluster = frappe.db.get_value("Cluster", self.cluster, ["title", "image"], as_dict=1)
 		doc.outbound_ip = server.ip
 		doc.server_team = server.team
 		doc.server_title = server.title
 		doc.environment = server.environment
+		doc.server_instance_state = server.instance_state
 		doc.inbound_ip = self.inbound_ip
 		doc.is_dedicated_server = is_dedicated_server(self.server)
 
@@ -2846,6 +2847,75 @@ class Site(Document, TagHelpers):
 			frappe.throw("Temporary sites are not allowed for Production environments")
 		self.takedown_date = date
 		self.save(ignore_permissions=True)
+
+	@dashboard_whitelist()
+	def set_schedule(self, preset):
+		environment = frappe.db.get_value("Server", self.server, "environment")
+		if environment == "Production":
+			frappe.throw("Instance scheduling is not available for Production sites")
+		if not frappe.db.exists("Site Schedule Preset", preset):
+			frappe.throw(f"Preset '{preset}' does not exist")
+
+		existing = frappe.db.get_value("Site Schedule", {"site": self.name}, "name")
+		if existing:
+			frappe.db.set_value("Site Schedule", existing, {"preset": preset, "enabled": 1})
+		else:
+			frappe.get_doc({
+				"doctype": "Site Schedule",
+				"site": self.name,
+				"enabled": 1,
+				"preset": preset,
+				"override": "None",
+			}).insert(ignore_permissions=True)
+
+	@dashboard_whitelist()
+	def disable_schedule(self):
+		existing = frappe.db.get_value("Site Schedule", {"site": self.name}, "name")
+		if existing:
+			frappe.db.set_value("Site Schedule", existing, "enabled", 0)
+
+	@dashboard_whitelist()
+	def clear_schedule(self, schedule_name):
+		frappe.delete_doc("Site Schedule", schedule_name, ignore_permissions=True)
+
+	@dashboard_whitelist()
+	def set_schedule_override(self, override_type, override_until=None):
+		if override_type not in ("None", "Until Datetime", "Indefinite"):
+			frappe.throw(f"Invalid override type: {override_type}")
+		if override_type == "Until Datetime":
+			if not override_until:
+				frappe.throw("override_until is required for 'Until Datetime' override")
+			if get_datetime(override_until) <= now_datetime():
+				frappe.throw("override_until must be a future datetime")
+		existing = frappe.db.get_value("Site Schedule", {"site": self.name}, "name")
+		if not existing:
+			frappe.throw("No schedule exists for this site. Set a schedule first.")
+		frappe.db.set_value("Site Schedule", existing, {
+			"override": override_type,
+			"override_until": override_until if override_type == "Until Datetime" else None,
+		})
+
+	@dashboard_whitelist()
+	def get_schedule(self):
+		schedule_name = frappe.db.get_value("Site Schedule", {"site": self.name}, "name")
+		if not schedule_name:
+			return None
+		schedule = frappe.db.get_value(
+			"Site Schedule",
+			schedule_name,
+			["name", "enabled", "preset", "override", "override_until"],
+			as_dict=True,
+		)
+		if schedule and schedule.preset:
+			preset = frappe.db.get_value(
+				"Site Schedule Preset",
+				schedule.preset,
+				["preset_name", "monday", "tuesday", "wednesday", "thursday",
+				 "friday", "saturday", "sunday", "all_day", "start_time", "stop_time"],
+				as_dict=True,
+			)
+			schedule.preset_doc = preset
+		return schedule
 
 	@property
 	def hybrid_site(self) -> bool:
