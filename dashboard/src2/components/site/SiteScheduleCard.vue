@@ -104,8 +104,8 @@ export default {
 	},
 	methods: {
 		async loadSchedule() {
-			const result = await this.$site.getSchedule.submit();
-			this.schedule = result;
+			await this.$site.getSchedule.submit();
+			this.schedule = this.$site.getSchedule.data?.preset ? this.$site.getSchedule.data : null;
 		},
 		showSetScheduleDialog(currentPreset = null) {
 			confirmDialog({
