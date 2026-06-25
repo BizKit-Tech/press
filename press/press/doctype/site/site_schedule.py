@@ -36,7 +36,7 @@ def _process_schedule(schedule):
         return
 
     tz = pytz.timezone(get_system_timezone())
-    local_now = pytz.utc.localize(now_datetime()).astimezone(tz)
+    local_now = tz.localize(now_datetime())
 
     def on_override_clear():
         frappe.db.set_value(
