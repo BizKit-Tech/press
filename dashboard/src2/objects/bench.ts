@@ -5,7 +5,6 @@ import { defineAsyncComponent, h } from 'vue';
 import { getTeam, switchToTeam } from '../data/team';
 import { icon } from '../utils/components';
 import {
-	clusterOptions,
 	getSitesTabColumns,
 	sitesTabRoute,
 	siteTabFilterControls
@@ -229,10 +228,12 @@ function filterControls() {
 			}
 		},
 		{
-			type: 'select',
-			label: 'Region',
+			type: 'link',
+			label: 'Project',
 			fieldname: 'cluster',
-			options: clusterOptions
+			options: {
+				doctype: 'Cluster'
+			}
 		}
 	] satisfies FilterField[] as FilterField[];
 }
