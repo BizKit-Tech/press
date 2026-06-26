@@ -103,36 +103,29 @@ export default {
 					options: ['', 'Active', 'Inactive', 'Suspended', 'Broken', 'Archived']
 				},
 				{
+					type: 'select',
+					label: 'Instance State',
+					fieldname: 'server.instance_state',
+					options: ['', 'Pending', 'Running', 'Stopped', 'Rebooting']
+				},
+				{
+					type: 'select',
+					label: 'Project',
+					fieldname: 'cluster',
+					options: clusterOptions
+				},
+				{
+					type: 'select',
+					label: 'Environment',
+					fieldname: 'server.environment',
+					options: ['', 'Development', 'Demo', 'Production']
+				},
+				{
 					type: 'link',
 					label: 'Version',
 					fieldname: 'group.version',
 					options: {
 						doctype: 'Frappe Version'
-					}
-				},
-				{
-					type: 'link',
-					label: 'Bench Group',
-					fieldname: 'group',
-					options: {
-						doctype: 'Release Group'
-					}
-				},
-				{
-					type: 'select',
-					label: 'Region',
-					fieldname: 'cluster',
-					options: clusterOptions
-				},
-				{
-					type: 'link',
-					label: 'Tag',
-					fieldname: 'tags.tag',
-					options: {
-						doctype: 'Press Tag',
-						filters: {
-							doctype_name: 'Site'
-						}
 					}
 				}
 			];

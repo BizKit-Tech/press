@@ -1,4 +1,5 @@
-import { defineAsyncComponent, h } from 'vue';
+import { createListResource } from 'frappe-ui';
+import { defineAsyncComponent, h, reactive } from 'vue';
 import { renderDialog } from '../../utils/components';
 import type {
 	BannerConfig,
@@ -12,19 +13,17 @@ import { planTitle } from '../../utils/format';
 
 export const unreachable = Error('unreachable'); // used to indicate that a codepath is unreachable
 
-export const clusterOptions = [
-	'',
-	'Bahrain',
-	'Cape Town',
-	'Frankfurt',
-	'KSA',
-	'London',
-	'Mumbai',
-	'Singapore',
-	'UAE',
-	'Virginia',
-	'Zurich'
-];
+export const clusterOptions: string[] = reactive(['']);
+
+createListResource({
+	doctype: 'Cluster',
+	fields: ['name', 'title'],
+	orderBy: 'title asc',
+	auto: true,
+	onSuccess(data: { name: string }[]) {
+		clusterOptions.splice(0, clusterOptions.length, '', ...data.map(c => c.name));
+	}
+});
 
 export function getUpsellBanner(site: DocumentResource, title: string) {
 	if (
@@ -72,7 +71,7 @@ export function getSitesTabColumns(forBenchTab: boolean) {
 			width: 0.5
 		},
 		{
-			label: 'Region',
+			label: 'Project',
 			fieldname: 'cluster_title',
 			width: 0.5,
 			prefix(row) {
@@ -107,21 +106,9 @@ export function siteTabFilterControls() {
 		},
 		{
 			type: 'select',
-			label: 'Region',
+			label: 'Project',
 			fieldname: 'cluster',
-			options: [
-				'',
-				'Bahrain',
-				'Cape Town',
-				'Frankfurt',
-				'KSA',
-				'London',
-				'Mumbai',
-				'Singapore',
-				'UAE',
-				'Virginia',
-				'Zurich'
-			]
+			options: clusterOptions
 		}
 	];
 }
