@@ -19,7 +19,7 @@ import { bytes, date, userCurrency } from '../utils/format';
 import { getToastErrorMessage } from '../utils/toast';
 import { getDocResource } from '../utils/resource';
 import { trialDays } from '../utils/site';
-import { clusterOptions, getUpsellBanner } from './common';
+import { getUpsellBanner } from './common';
 import { getAppsTab } from './common/apps';
 import { isMobile } from '../utils/device';
 
@@ -90,7 +90,8 @@ export default {
 			'cluster.image as cluster_image',
 			'cluster.title as cluster_title',
 			'trial_end_date',
-			'server.instance_state as server_instance_state'
+			'server.instance_state as server_instance_state',
+			'server.environment as server_environment'
 		],
 		orderBy: 'creation desc',
 		searchField: 'host_name',
@@ -109,10 +110,12 @@ export default {
 					options: ['', 'Pending', 'Running', 'Stopped', 'Rebooting']
 				},
 				{
-					type: 'select',
+					type: 'link',
 					label: 'Project',
 					fieldname: 'cluster',
-					options: clusterOptions
+					options: {
+						doctype: 'Cluster'
+					}
 				},
 				{
 					type: 'select',

@@ -1,5 +1,4 @@
-import { createListResource } from 'frappe-ui';
-import { defineAsyncComponent, h, reactive } from 'vue';
+import { defineAsyncComponent, h } from 'vue';
 import { renderDialog } from '../../utils/components';
 import type {
 	BannerConfig,
@@ -13,17 +12,6 @@ import { planTitle } from '../../utils/format';
 
 export const unreachable = Error('unreachable'); // used to indicate that a codepath is unreachable
 
-export const clusterOptions: string[] = reactive(['']);
-
-createListResource({
-	doctype: 'Cluster',
-	fields: ['name', 'title'],
-	orderBy: 'title asc',
-	auto: true,
-	onSuccess(data: { name: string }[]) {
-		clusterOptions.splice(0, clusterOptions.length, '', ...data.map(c => c.name));
-	}
-});
 
 export function getUpsellBanner(site: DocumentResource, title: string) {
 	if (
@@ -105,10 +93,12 @@ export function siteTabFilterControls() {
 			options: ['', 'Active', 'Inactive', 'Suspended', 'Broken']
 		},
 		{
-			type: 'select',
+			type: 'link',
 			label: 'Project',
 			fieldname: 'cluster',
-			options: clusterOptions
+			options: {
+				doctype: 'Cluster'
+			}
 		}
 	];
 }
