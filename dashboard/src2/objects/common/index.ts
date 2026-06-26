@@ -12,19 +12,6 @@ import { planTitle } from '../../utils/format';
 
 export const unreachable = Error('unreachable'); // used to indicate that a codepath is unreachable
 
-export const clusterOptions = [
-	'',
-	'Bahrain',
-	'Cape Town',
-	'Frankfurt',
-	'KSA',
-	'London',
-	'Mumbai',
-	'Singapore',
-	'UAE',
-	'Virginia',
-	'Zurich'
-];
 
 export function getUpsellBanner(site: DocumentResource, title: string) {
 	if (
@@ -72,7 +59,7 @@ export function getSitesTabColumns(forBenchTab: boolean) {
 			width: 0.5
 		},
 		{
-			label: 'Region',
+			label: 'Project',
 			fieldname: 'cluster_title',
 			width: 0.5,
 			prefix(row) {
@@ -106,22 +93,12 @@ export function siteTabFilterControls() {
 			options: ['', 'Active', 'Inactive', 'Suspended', 'Broken']
 		},
 		{
-			type: 'select',
-			label: 'Region',
+			type: 'link',
+			label: 'Project',
 			fieldname: 'cluster',
-			options: [
-				'',
-				'Bahrain',
-				'Cape Town',
-				'Frankfurt',
-				'KSA',
-				'London',
-				'Mumbai',
-				'Singapore',
-				'UAE',
-				'Virginia',
-				'Zurich'
-			]
+			options: {
+				doctype: 'Cluster'
+			}
 		}
 	];
 }

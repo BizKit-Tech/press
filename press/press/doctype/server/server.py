@@ -44,6 +44,7 @@ class BaseServer(Document, TagHelpers):
 		"is_self_hosted",
 		"auto_add_storage_min",
 		"auto_add_storage_max",
+		"environment",
 	)
 
 	@staticmethod

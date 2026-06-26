@@ -57,7 +57,7 @@ def _new(args):
         if is_new:
             print("Creating new client")
             print("Creating cluster")
-            cluster = create_cluster(project_name)
+            cluster = create_cluster(project_name, team)
             created["cluster"] = cluster
             print("Creating database server")
             db_server = create_database_server(project_name, cluster, site_plan_details)
@@ -208,7 +208,7 @@ def get_site_plan_details(site_plan):
     }
 
 
-def create_cluster(project_name):
+def create_cluster(project_name, team):
     cluster_doc = frappe.get_doc({
         "doctype": "Cluster",
         "name": project_name,
@@ -217,6 +217,7 @@ def create_cluster(project_name):
         "public": 1,
         "cloud_provider": "Generic",
         "region": "ap-southeast-1",
+        "team": team,
     })
     cluster_doc.insert()
     frappe.db.commit()

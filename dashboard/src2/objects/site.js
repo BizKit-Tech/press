@@ -19,7 +19,7 @@ import { bytes, date, userCurrency } from '../utils/format';
 import { getToastErrorMessage } from '../utils/toast';
 import { getDocResource } from '../utils/resource';
 import { trialDays } from '../utils/site';
-import { clusterOptions, getUpsellBanner } from './common';
+import { getUpsellBanner } from './common';
 import { getAppsTab } from './common/apps';
 import { isMobile } from '../utils/device';
 
@@ -90,7 +90,8 @@ export default {
 			'cluster.image as cluster_image',
 			'cluster.title as cluster_title',
 			'trial_end_date',
-			'server.instance_state as server_instance_state'
+			'server.instance_state as server_instance_state',
+			'server.environment as server_environment'
 		],
 		orderBy: 'creation desc',
 		searchField: 'host_name',
@@ -99,8 +100,31 @@ export default {
 				{
 					type: 'select',
 					label: 'Status',
+					class: !isMobile() ? 'w-28' : '',
 					fieldname: 'status',
 					options: ['', 'Active', 'Inactive', 'Suspended', 'Broken', 'Archived']
+				},
+				{
+					type: 'select',
+					label: 'Instance State',
+					class: !isMobile() ? 'w-32' : '',
+					fieldname: 'server.instance_state',
+					options: ['', 'Pending', 'Running', 'Stopped', 'Rebooting']
+				},
+				{
+					type: 'link',
+					label: 'Project',
+					fieldname: 'cluster',
+					options: {
+						doctype: 'Cluster'
+					}
+				},
+				{
+					type: 'select',
+					label: 'Environment',
+					class: !isMobile() ? 'w-32' : '',
+					fieldname: 'server.environment',
+					options: ['', 'Development', 'Demo', 'Production']
 				},
 				{
 					type: 'link',
@@ -108,31 +132,6 @@ export default {
 					fieldname: 'group.version',
 					options: {
 						doctype: 'Frappe Version'
-					}
-				},
-				{
-					type: 'link',
-					label: 'Bench Group',
-					fieldname: 'group',
-					options: {
-						doctype: 'Release Group'
-					}
-				},
-				{
-					type: 'select',
-					label: 'Region',
-					fieldname: 'cluster',
-					options: clusterOptions
-				},
-				{
-					type: 'link',
-					label: 'Tag',
-					fieldname: 'tags.tag',
-					options: {
-						doctype: 'Press Tag',
-						filters: {
-							doctype_name: 'Site'
-						}
 					}
 				}
 			];
