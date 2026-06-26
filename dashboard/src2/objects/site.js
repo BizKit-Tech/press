@@ -100,12 +100,14 @@ export default {
 				{
 					type: 'select',
 					label: 'Status',
+					class: !isMobile() ? 'w-28' : '',
 					fieldname: 'status',
 					options: ['', 'Active', 'Inactive', 'Suspended', 'Broken', 'Archived']
 				},
 				{
 					type: 'select',
 					label: 'Instance State',
+					class: !isMobile() ? 'w-32' : '',
 					fieldname: 'server.instance_state',
 					options: ['', 'Pending', 'Running', 'Stopped', 'Rebooting']
 				},
@@ -120,6 +122,7 @@ export default {
 				{
 					type: 'select',
 					label: 'Environment',
+					class: !isMobile() ? 'w-32' : '',
 					fieldname: 'server.environment',
 					options: ['', 'Development', 'Demo', 'Production']
 				},
