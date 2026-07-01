@@ -400,6 +400,7 @@ export default {
 				{
 					label: 'Takedown Date',
 					value: this.$site.doc?.takedown_date || 'Not set',
+					condition: ['Development', 'Demo'].includes(this.$site.doc?.environment),
 					suffix: !this.$site.doc?.takedown_date && this.$team?.doc?.is_desk_user
 						? h(Button, {
 								variant: 'subtle',
@@ -414,7 +415,7 @@ export default {
 							}, () => 'Change')
 						: null
 				}
-			];
+			].filter(d => d.condition !== false);
 		},
 		currentPlan() {
 			if (!this.$site?.doc?.current_plan || !this.$team?.doc) return null;
