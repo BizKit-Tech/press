@@ -77,7 +77,7 @@ export default {
 					icon: () => h(Package),
 					route: '/benches',
 					isActive: routeName.startsWith('Bench'),
-					condition: this.$team.doc?.is_desk_user,
+					condition: false,
 					disabled: !onboardingComplete || enforce2FA
 				},
 				{
@@ -93,6 +93,7 @@ export default {
 							'Deploy Candidate'
 						].includes(routeName) ||
 						routeName.startsWith('Release Group Detail'),
+					condition: false,
 					disabled: !onboardingComplete || enforce2FA
 				},
 				{
@@ -102,6 +103,7 @@ export default {
 					isActive:
 						['New Server'].includes(routeName) ||
 						routeName.startsWith('Server'),
+					condition: false,
 					disabled: !onboardingComplete || enforce2FA
 				},
 				{
@@ -109,9 +111,7 @@ export default {
 					icon: () => h(App),
 					route: '/apps',
 					isActive: routeName.startsWith('Marketplace'),
-					condition:
-						this.$team.doc?.is_desk_user ||
-						(!!this.$team.doc.is_developer && this.$session.hasAppsAccess),
+					condition: false,
 					disabled: enforce2FA
 				},
 				{
@@ -141,6 +141,7 @@ export default {
 					isActive: ['SQL Playground', 'DB Analyzer', 'Log Browser'].includes(
 						routeName
 					),
+					condition: false, // TODO: Enable this once we have a proper dev tools section
 					disabled: enforce2FA
 				},
 				{
