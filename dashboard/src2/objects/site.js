@@ -663,7 +663,7 @@ export default {
 				icon: icon('settings'),
 				route: 'site-config',
 				type: 'list',
-				condition: site => site.doc?.status !== 'Archived',
+				condition: false, // Disable this tab until we have a proper config editor
 				list: {
 					doctype: 'Site Config',
 					filters: site => {
